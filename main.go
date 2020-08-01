@@ -27,6 +27,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	l.Info("Loaded config: ", hclog.Fmt("%+v", cnf))
 
 	sm := mux.NewRouter()
 

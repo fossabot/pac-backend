@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"github.com/joho/godotenv"
 	"os"
 )
@@ -19,4 +20,9 @@ func LoadConfig() (*Config, error) {
 	return &Config{
 		BindAddress: os.Getenv("BIND_ADDRESS"),
 	}, nil
+}
+
+func (c *Config) String() string {
+	s, _ := json.MarshalIndent(c, "", "\t")
+	return string(s)
 }
