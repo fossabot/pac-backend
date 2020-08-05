@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"github.com/joho/godotenv"
 	"os"
+	"strconv"
 )
 
 type Config struct {
-	BindAddress string
+	BindAddress    string
+	LogLevel       string
+	LogPersistence bool
 }
 
 func LoadConfig() (*Config, error) {
@@ -17,8 +20,14 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
+	bindAddress := os.Getenv("BIND_ADDRESS")
+	logLevel := os.Getenv("LOG_LEVEL")
+	logPersistence, _ := strconv.ParseBool(os.Getenv("LOG_PERSISTENCE"))
+
 	return &Config{
-		BindAddress: os.Getenv("BIND_ADDRESS"),
+		BindAddress:    bindAddress,
+		LogLevel:       logLevel,
+		LogPersistence: logPersistence,
 	}, nil
 }
 
