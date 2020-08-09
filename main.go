@@ -22,7 +22,6 @@ import (
 )
 
 func healthHandler(rw http.ResponseWriter, r *http.Request) {
-	log.Println("Health check handler called!")
 	rw.WriteHeader(http.StatusNoContent)
 }
 
