@@ -44,7 +44,7 @@ func main() {
 	})
 
 	// connect to database, defer closing
-	db, err := openDB(cnf, logger)
+	db, err := openDB(cnf)
 	if err != nil {
 		logger.Error("Failed to connect to database")
 		panic(err)
@@ -108,16 +108,16 @@ func main() {
 	s.Shutdown(ctx)
 }
 
-func openDB(cnf *config.Config, logger hclog.Logger) (*gorm.DB, error) {
+func openDB(cnf *config.Config) (*gorm.DB, error) {
 	var dbUrl string
 
 	switch cnf.DbDriver {
 	case "sqlite3":
 		dbUrl = cnf.DbName
-		logger.Info("Successfully connected to sqlite3 database!")
+		log.Println("Connecting to embedded sqlite3 database... file name: " + dbUrl)
 	case "mysql":
 		dbUrl = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", cnf.DbUser, cnf.DbPassword, cnf.DbHost, cnf.DbPort, cnf.DbName)
-		logger.Info("Successfully connected to mysql database!")
+		log.Println("Connecting to mysql database... uri: " + dbUrl)
 	default:
 		return nil, fmt.Errorf("error! Database driver must be one of: [sqlite3, mysql], was %s", cnf.DbDriver)
 	}
