@@ -6,8 +6,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite" //sqlite database driver
 	_ "github.com/jinzhu/gorm/dialects/mysql"  //mysql database driver
+	_ "github.com/jinzhu/gorm/dialects/sqlite" //sqlite database driver
 	"github.com/justinas/alice"
 	"github.com/milutindzunic/pac-backend/config"
 	"github.com/milutindzunic/pac-backend/data"
@@ -21,8 +21,9 @@ import (
 	"time"
 )
 
-func testHandler(rw http.ResponseWriter, r *http.Request) {
-	log.Println("Handler called!")
+func healthHandler(rw http.ResponseWriter, r *http.Request) {
+	log.Println("Health check handler called!")
+	rw.WriteHeader(http.StatusNoContent)
 }
 
 func main() {
@@ -43,7 +44,7 @@ func main() {
 	})
 
 	// connect to database, defer closing
-	db, err := openDB(cnf)
+	db, err := openDB(cnf, logger)
 	if err != nil {
 		logger.Error("Failed to connect to database")
 		panic(err)
@@ -63,7 +64,7 @@ func main() {
 	sm := mux.NewRouter()
 
 	jsonChain := alice.New(middleware.EnforceJsonContentType)
-	sm.HandleFunc("/", testHandler)
+	sm.HandleFunc("/", healthHandler)
 	sm.Handle("/locations", http.HandlerFunc(lh.GetLocations)).Methods("GET")
 	sm.Handle("/locations/{id:[0-9]+}", http.HandlerFunc(lh.GetLocation)).Methods("GET")
 	sm.Handle("/locations", jsonChain.Then(http.HandlerFunc(lh.CreateLocation))).Methods("POST")
@@ -107,14 +108,16 @@ func main() {
 	s.Shutdown(ctx)
 }
 
-func openDB(cnf *config.Config) (*gorm.DB, error) {
+func openDB(cnf *config.Config, logger hclog.Logger) (*gorm.DB, error) {
 	var dbUrl string
 
 	switch cnf.DbDriver {
 	case "sqlite3":
 		dbUrl = cnf.DbName
+		logger.Info("Successfully connected to sqlite3 database!")
 	case "mysql":
 		dbUrl = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", cnf.DbUser, cnf.DbPassword, cnf.DbHost, cnf.DbPort, cnf.DbName)
+		logger.Info("Successfully connected to mysql database!")
 	default:
 		return nil, fmt.Errorf("error! Database driver must be one of: [sqlite3, mysql], was %s", cnf.DbDriver)
 	}
