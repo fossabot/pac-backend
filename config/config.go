@@ -19,10 +19,11 @@ type Config struct {
 
 // Default config for running the service locally
 var Defaults = map[string]string{
-	"BIND_ADDRESS": ":9090",
-	"LOG_LEVEL":    "DEBUG",
-	"DB_DRIVER":    "sqlite3",
-	"DB_NAME":      "test.db",
+	"BIND_ADDRESS":    ":9090",
+	"LOG_LEVEL":       "DEBUG",
+	"LOG_PERSISTENCE": "true",
+	"DB_DRIVER":       "sqlite3",
+	"DB_NAME":         "test.db",
 }
 
 func LoadConfig() (*Config, error) {
@@ -31,6 +32,7 @@ func LoadConfig() (*Config, error) {
 	// 1) Set defaults
 	configReader.SetDefault("BIND_ADDRESS", Defaults["BIND_ADDRESS"])
 	configReader.SetDefault("LOG_LEVEL", Defaults["LOG_LEVEL"])
+	configReader.SetDefault("LOG_PERSISTENCE", Defaults["LOG_LEVEL"])
 	configReader.SetDefault("DB_DRIVER", Defaults["DB_DRIVER"])
 	configReader.SetDefault("DB_NAME", Defaults["DB_NAME"])
 
