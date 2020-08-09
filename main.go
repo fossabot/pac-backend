@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/jinzhu/gorm/dialects/sqlite" //sqlite database driver
+	_ "github.com/jinzhu/gorm/dialects/mysql"  //mysql database driver
 	"github.com/justinas/alice"
 	"github.com/milutindzunic/pac-backend/config"
 	"github.com/milutindzunic/pac-backend/data"
@@ -41,7 +43,7 @@ func main() {
 	})
 
 	// connect to database, defer closing
-	db, err := gorm.Open("sqlite3", "test.db")
+	db, err := openDB(cnf)
 	if err != nil {
 		logger.Error("Failed to connect to database")
 		panic(err)
@@ -103,4 +105,19 @@ func main() {
 	logger.Info("Shutting down server...")
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	s.Shutdown(ctx)
+}
+
+func openDB(cnf *config.Config) (*gorm.DB, error) {
+	var dbUrl string
+
+	switch cnf.DbDriver {
+	case "sqlite3":
+		dbUrl = cnf.DbName
+	case "mysql":
+		dbUrl = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", cnf.DbUser, cnf.DbPassword, cnf.DbHost, cnf.DbPort, cnf.DbName)
+	default:
+		return nil, fmt.Errorf("error! Database driver must be one of: [sqlite3, mysql], was %s", cnf.DbDriver)
+	}
+
+	return gorm.Open(cnf.DbDriver, dbUrl)
 }

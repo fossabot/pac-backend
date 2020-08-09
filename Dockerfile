@@ -34,9 +34,8 @@ RUN cp /build/main .
 # Build a small image
 FROM scratch
 
-# Copy the Pre-built binary file from the previous stage. Also copy the .env file
+# Copy the Pre-built binary file from the previous stage
 COPY --from=builder /dist/main .
-COPY --from=builder /build/.env .
 
 # Command to run
 ENTRYPOINT ["/main"]
