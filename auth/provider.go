@@ -11,6 +11,7 @@ import (
 )
 
 type OauthConfig struct {
+	Enabled      bool
 	Issuer       string
 	ClientID     string
 	ClientSecret string
@@ -19,6 +20,7 @@ type OauthConfig struct {
 }
 
 type OauthProvider struct {
+	enabled      bool
 	oauth2Config *oauth2.Config
 	verifier     *oidc.IDTokenVerifier
 	context      context.Context
@@ -28,6 +30,10 @@ type OauthProvider struct {
 const oauthState = "myState"
 
 func NewProvider(config OauthConfig, logger hclog.Logger) (*OauthProvider, error) {
+	if !config.Enabled {
+		return &OauthProvider{enabled: false}, nil
+	}
+
 	ctx := context.Background()
 	provider, err := oidc.NewProvider(ctx, config.Issuer)
 	if err != nil {
@@ -61,53 +67,67 @@ func NewProvider(config OauthConfig, logger hclog.Logger) (*OauthProvider, error
 }
 
 func (p *OauthProvider) Middleware(next http.Handler) http.Handler {
+	if !p.enabled {
+		// return no-op Middleware
+		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(rw, r)
+		})
+	}
+
 	oauth2Config := p.oauth2Config
 	verifier := p.verifier
 	ctx := p.context
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 
 		rawAccessToken := r.Header.Get("Authorization")
 		if rawAccessToken == "" {
-			http.Redirect(w, r, oauth2Config.AuthCodeURL(oauthState), http.StatusFound)
+			http.Redirect(rw, r, oauth2Config.AuthCodeURL(oauthState), http.StatusFound)
 			return
 		}
 
 		parts := strings.Split(rawAccessToken, " ")
 		if len(parts) != 2 {
-			w.WriteHeader(http.StatusBadRequest)
+			rw.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		_, err := verifier.Verify(ctx, parts[1])
 
 		if err != nil {
-			http.Redirect(w, r, oauth2Config.AuthCodeURL(oauthState), http.StatusFound)
+			http.Redirect(rw, r, oauth2Config.AuthCodeURL(oauthState), http.StatusFound)
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(rw, r)
 	})
 }
 
 func (p *OauthProvider) CallbackHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	if !p.enabled {
+		// Return unimplemented callback handler
+		return http.HandlerFunc(func(rw http.ResponseWriter, request *http.Request) {
+			http.Error(rw, "OAuth2 callback disabled!", http.StatusNotImplemented)
+		})
+	}
+
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		oauth2Config := p.oauth2Config
 		verifier := p.verifier
 		ctx := p.context
 
 		oauth2Token, err := oauth2Config.Exchange(ctx, r.URL.Query().Get("code"))
 		if err != nil {
-			http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
+			http.Error(rw, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 		if !ok {
-			http.Error(w, "No id_token field in oauth2 token.", http.StatusInternalServerError)
+			http.Error(rw, "No id_token field in oauth2 token.", http.StatusInternalServerError)
 			return
 		}
 		idToken, err := verifier.Verify(ctx, rawIDToken)
 		if err != nil {
-			http.Error(w, "Failed to verify ID Token: "+err.Error(), http.StatusInternalServerError)
+			http.Error(rw, "Failed to verify ID Token: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -117,17 +137,17 @@ func (p *OauthProvider) CallbackHandler() http.Handler {
 		}{oauth2Token, new(json.RawMessage)}
 
 		if err := idToken.Claims(&resp.IDTokenClaims); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		data, err := json.MarshalIndent(resp, "", "    ")
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		p.logger.Debug("Received OAuth2 Token: ", "token", hclog.Fmt("%s", string(data)))
-		w.Write(data)
+		rw.Write(data)
 	})
 }

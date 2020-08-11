@@ -47,7 +47,7 @@ func main() {
 	// connect to database, defer closing
 	db, err := openDB(cnf)
 	if err != nil {
-		logger.Error("Failed to connect to database")
+		logger.Error("Failed to connect to database", "err", err)
 		panic(err)
 	}
 	db.LogMode(cnf.LogPersistence)
@@ -66,6 +66,7 @@ func main() {
 
 	// Authentication
 	oauth, err := auth.NewProvider(auth.OauthConfig{
+		Enabled:      cnf.OAuthEnable,
 		Issuer:       cnf.OAuthIssuer,
 		ClientID:     cnf.OAuthClientId,
 		ClientSecret: cnf.OAuthClientSecret,
@@ -73,18 +74,26 @@ func main() {
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 	}, logger)
 	if err != nil {
-		panic(err) // TODO
+		logger.Error("Failed to create Oauth2 configuration", "err", err)
+		panic(err)
 	}
 
+	// Handler chains
 	jsonChain := alice.New(middleware.EnforceJsonContentType)
-	oidcChain := alice.New(oauth.Middleware)
+	secureChain := alice.New()
+	if cnf.OAuthEnable {
+		secureChain = alice.New(oauth.Middleware)
+	}
+
+	// Register handlers
 	sm.HandleFunc("/", healthHandler)
-	sm.Handle("/locations", oidcChain.Then(http.HandlerFunc(lh.GetLocations))).Methods("GET")
+	sm.Handle("/locations", secureChain.Then(http.HandlerFunc(lh.GetLocations))).Methods("GET")
 	sm.Handle("/locations/{id:[0-9]+}", http.HandlerFunc(lh.GetLocation)).Methods("GET")
 	sm.Handle("/locations", jsonChain.Then(http.HandlerFunc(lh.CreateLocation))).Methods("POST")
 	sm.Handle("/locations/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(lh.UpdateLocation))).Methods("PUT")
 	sm.Handle("/locations/{id:[0-9]+}", http.HandlerFunc(lh.DeleteLocation)).Methods("DELETE")
 
+	// OAuth2 callback
 	sm.Handle("/oauth2/callback", oauth.CallbackHandler())
 
 	// Prometheus metrics handler
