@@ -10,12 +10,12 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"  //mysql database driver
 	_ "github.com/jinzhu/gorm/dialects/sqlite" //sqlite database driver
 	"github.com/justinas/alice"
+	"github.com/milutindzunic/pac-backend/auth"
 	"github.com/milutindzunic/pac-backend/config"
 	"github.com/milutindzunic/pac-backend/data"
 	"github.com/milutindzunic/pac-backend/handlers"
 	"github.com/milutindzunic/pac-backend/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"golang.org/x/oauth2"
 	"log"
 	"net/http"
 	"os"
@@ -64,13 +64,20 @@ func main() {
 
 	sm := mux.NewRouter()
 
-	provider, verifier, ctx2, err := createOidcProvider()
+	// Authentication
+	oauth, err := auth.NewProvider(auth.OauthConfig{
+		Issuer:       cnf.OAuthIssuer,
+		ClientID:     cnf.OAuthClientId,
+		ClientSecret: cnf.OAuthClientSecret,
+		RedirectURL:  cnf.OAuthRedirectUrl,
+		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+	}, logger)
 	if err != nil {
 		panic(err) // TODO
 	}
 
-	jsonChain := alice.New(middleware.EnforceJsonContentType, middleware.OIDCMiddleware(provider, ctx2, verifier))
-	oidcChain := alice.New(middleware.OIDC(provider, ctx2, verifier))
+	jsonChain := alice.New(middleware.EnforceJsonContentType)
+	oidcChain := alice.New(oauth.Middleware)
 	sm.HandleFunc("/", healthHandler)
 	sm.Handle("/locations", oidcChain.Then(http.HandlerFunc(lh.GetLocations))).Methods("GET")
 	sm.Handle("/locations/{id:[0-9]+}", http.HandlerFunc(lh.GetLocation)).Methods("GET")
@@ -78,7 +85,7 @@ func main() {
 	sm.Handle("/locations/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(lh.UpdateLocation))).Methods("PUT")
 	sm.Handle("/locations/{id:[0-9]+}", http.HandlerFunc(lh.DeleteLocation)).Methods("DELETE")
 
-	sm.HandleFunc("/demo/callback", healthHandler)
+	sm.Handle("/oauth2/callback", oauth.CallbackHandler())
 
 	// Prometheus metrics handler
 	sm.Handle("/metrics", promhttp.Handler())
@@ -132,30 +139,4 @@ func openDB(cnf *config.Config) (*gorm.DB, error) {
 	}
 
 	return gorm.Open(cnf.DbDriver, dbUrl)
-}
-
-func createOidcProvider() (*oauth2.Config, *oidc.IDTokenVerifier, context.Context, error) {
-	ctx := context.Background()
-	provider, err := oidc.NewProvider(ctx, "http://localhost:8080/auth/realms/demo")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	oauth2Config := &oauth2.Config{
-		ClientID:     "demo-client",
-		ClientSecret: "89d223a1-4c9a-4e16-9819-66250d1118ea",
-		// Discovery returns the OAuth2 endpoints.
-		Endpoint:     provider.Endpoint(),
-		RedirectURL:  "http://localhost:9090/*",
-		// "openid" is a required scope for OpenID Connect flows.
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
-	}
-
-	oidcConfig := &oidc.Config{
-		ClientID: "demo-client",
-	}
-
-	verifier := provider.Verifier(oidcConfig)
-
-	return oauth2Config, verifier, ctx, nil
 }
