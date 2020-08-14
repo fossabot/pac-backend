@@ -14,6 +14,7 @@ import (
 	"github.com/milutindzunic/pac-backend/config"
 	"github.com/milutindzunic/pac-backend/data"
 	"github.com/milutindzunic/pac-backend/handlers"
+	"github.com/milutindzunic/pac-backend/dbinit"
 	"github.com/milutindzunic/pac-backend/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
@@ -50,17 +51,42 @@ func main() {
 		logger.Error("Failed to connect to database", "err", err)
 		panic(err)
 	}
+	db.SingularTable(true)
 	db.LogMode(cnf.LogPersistence)
 	defer db.Close()
 
 	// Keep the schema up to date
 	db = db.AutoMigrate(&data.Location{})
+	db = db.AutoMigrate(&data.Event{})
+	db = db.AutoMigrate(&data.Organization{})
+	db = db.AutoMigrate(&data.Person{})
+	db = db.AutoMigrate(&data.Room{})
+	db = db.AutoMigrate(&data.Topic{})
+	db = db.AutoMigrate(&data.Talk{})
+	db = db.AutoMigrate(&data.TalkDate{})
 
 	// create stores
 	var locationStore data.LocationStore = data.NewLocationDBStore(db, logger)
+	var eventStore data.EventStore = data.NewEventDBStore(db, logger)
+	var organizationStore data.OrganizationStore = data.NewOrganizationDBStore(db, logger)
+	var personStore data.PersonStore = data.NewPersonDBStore(db, logger)
+	var roomStore data.RoomStore = data.NewRoomDBStore(db, logger)
+	var topicStore data.TopicStore = data.NewTopicDBStore(db, logger)
+	var talkStore data.TalkStore = data.NewTalkDBStore(db, logger)
+	var talkDateStore data.TalkDateStore = data.NewTalkDateDBStore(db, logger)
 
 	// create handlers
 	lh := handlers.NewLocationsHandler(locationStore, logger)
+	eh := handlers.NewEventsHandler(eventStore, logger)
+	oh := handlers.NewOrganizationsHandler(organizationStore, logger)
+	ph := handlers.NewPersonsHandler(personStore, logger)
+	rh := handlers.NewRoomsHandler(roomStore, logger)
+	th := handlers.NewTopicsHandler(topicStore, logger)
+	tkh := handlers.NewTalksHandler(talkStore, logger)
+	tdh := handlers.NewTalkDatesHandler(talkDateStore, logger)
+
+	// TODO zasad ovde
+	dbinit.DB(db, locationStore, eventStore, organizationStore, personStore, roomStore, topicStore, talkStore, talkDateStore)
 
 	sm := mux.NewRouter()
 
@@ -87,11 +113,54 @@ func main() {
 
 	// Register handlers
 	sm.HandleFunc("/", healthHandler)
+	// Locations
 	sm.Handle("/locations", secureChain.Then(http.HandlerFunc(lh.GetLocations))).Methods("GET")
 	sm.Handle("/locations/{id:[0-9]+}", http.HandlerFunc(lh.GetLocation)).Methods("GET")
 	sm.Handle("/locations", jsonChain.Then(http.HandlerFunc(lh.CreateLocation))).Methods("POST")
 	sm.Handle("/locations/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(lh.UpdateLocation))).Methods("PUT")
 	sm.Handle("/locations/{id:[0-9]+}", http.HandlerFunc(lh.DeleteLocation)).Methods("DELETE")
+	// Events
+	sm.Handle("/events", secureChain.Then(http.HandlerFunc(eh.GetEvents))).Methods("GET")
+	sm.Handle("/events/{id:[0-9]+}", http.HandlerFunc(eh.GetEvent)).Methods("GET")
+	sm.Handle("/events", jsonChain.Then(http.HandlerFunc(eh.CreateEvent))).Methods("POST")
+	sm.Handle("/events/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(eh.UpdateEvent))).Methods("PUT")
+	sm.Handle("/events/{id:[0-9]+}", http.HandlerFunc(eh.DeleteEvent)).Methods("DELETE")
+	// Organizations
+	sm.Handle("/organizations", secureChain.Then(http.HandlerFunc(oh.GetOrganizations))).Methods("GET")
+	sm.Handle("/organizations/{id:[0-9]+}", http.HandlerFunc(oh.GetOrganization)).Methods("GET")
+	sm.Handle("/organizations", jsonChain.Then(http.HandlerFunc(oh.CreateOrganization))).Methods("POST")
+	sm.Handle("/organizations/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(oh.UpdateOrganization))).Methods("PUT")
+	sm.Handle("/organizations/{id:[0-9]+}", http.HandlerFunc(oh.DeleteOrganization)).Methods("DELETE")
+	// Persons
+	sm.Handle("/persons", secureChain.Then(http.HandlerFunc(ph.GetPersons))).Methods("GET")
+	sm.Handle("/persons/{id:[0-9]+}", http.HandlerFunc(ph.GetPerson)).Methods("GET")
+	sm.Handle("/persons", jsonChain.Then(http.HandlerFunc(ph.CreatePerson))).Methods("POST")
+	sm.Handle("/persons/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(ph.UpdatePerson))).Methods("PUT")
+	sm.Handle("/persons/{id:[0-9]+}", http.HandlerFunc(ph.DeletePerson)).Methods("DELETE")
+	// Rooms
+	sm.Handle("/rooms", secureChain.Then(http.HandlerFunc(rh.GetRooms))).Methods("GET")
+	sm.Handle("/rooms/{id:[0-9]+}", http.HandlerFunc(rh.GetRoom)).Methods("GET")
+	sm.Handle("/rooms", jsonChain.Then(http.HandlerFunc(rh.CreateRoom))).Methods("POST")
+	sm.Handle("/rooms/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(rh.UpdateRoom))).Methods("PUT")
+	sm.Handle("/rooms/{id:[0-9]+}", http.HandlerFunc(rh.DeleteRoom)).Methods("DELETE")
+	// Topics
+	sm.Handle("/topics", secureChain.Then(http.HandlerFunc(th.GetTopics))).Methods("GET")
+	sm.Handle("/topics/{id:[0-9]+}", http.HandlerFunc(th.GetTopic)).Methods("GET")
+	sm.Handle("/topics", jsonChain.Then(http.HandlerFunc(th.CreateTopic))).Methods("POST")
+	sm.Handle("/topics/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(th.UpdateTopic))).Methods("PUT")
+	sm.Handle("/topics/{id:[0-9]+}", http.HandlerFunc(th.DeleteTopic)).Methods("DELETE")
+	// Talks
+	sm.Handle("/talks", secureChain.Then(http.HandlerFunc(tkh.GetTalks))).Methods("GET")
+	sm.Handle("/talks/{id:[0-9]+}", http.HandlerFunc(tkh.GetTalk)).Methods("GET")
+	sm.Handle("/talks", jsonChain.Then(http.HandlerFunc(tkh.CreateTalk))).Methods("POST")
+	sm.Handle("/talks/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(tkh.UpdateTalk))).Methods("PUT")
+	sm.Handle("/talks/{id:[0-9]+}", http.HandlerFunc(tkh.DeleteTalk)).Methods("DELETE")
+	// Talk Dates
+	sm.Handle("/talkDates", secureChain.Then(http.HandlerFunc(tdh.GetTalkDates))).Methods("GET")
+	sm.Handle("/talkDates/{id:[0-9]+}", http.HandlerFunc(tdh.GetTalkDate)).Methods("GET")
+	sm.Handle("/talkDates", jsonChain.Then(http.HandlerFunc(tdh.CreateTalkDate))).Methods("POST")
+	sm.Handle("/talkDates/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(tdh.UpdateTalkDate))).Methods("PUT")
+	sm.Handle("/talkDates/{id:[0-9]+}", http.HandlerFunc(tdh.DeleteTalkDate)).Methods("DELETE")
 
 	// OAuth2 callback
 	sm.Handle("/oauth2/callback", oauth.CallbackHandler())

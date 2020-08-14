@@ -12,10 +12,8 @@ type Location struct {
 	Name string `json:"name"`
 }
 
-type Locations []*Location
-
 type LocationStore interface {
-	GetLocations() (Locations, error)
+	GetLocations() ([]*Location, error)
 	GetLocationByID(id uint) (*Location, error)
 	UpdateLocation(id uint, loc *Location) (*Location, error)
 	AddLocation(loc *Location) (*Location, error)
@@ -38,7 +36,7 @@ func NewLocationDBStore(db *gorm.DB, log hclog.Logger) *LocationDBStore {
 	return &LocationDBStore{db, log}
 }
 
-func (db *LocationDBStore) GetLocations() (Locations, error) {
+func (db *LocationDBStore) GetLocations() ([]*Location, error) {
 	db.log.Debug("Getting all locations...")
 
 	var locations []*Location
