@@ -126,3 +126,19 @@ func (lh *EventsHandler) DeleteEvent(rw http.ResponseWriter, r *http.Request) {
 
 	rw.WriteHeader(http.StatusNoContent)
 }
+
+func (lh *EventsHandler) GetEventsByTalkID(rw http.ResponseWriter, r *http.Request) {
+	talkID := readId(r)
+
+	events, err := lh.store.GetEventsByTalkID(talkID)
+	if err != nil {
+		writeJSONErrorWithStatus("Error getting entities", err.Error(), rw, http.StatusInternalServerError)
+		return
+	}
+
+	err = writeJSONWithStatus(events, rw, http.StatusOK)
+	if err != nil {
+		lh.log.Error("Error serializing entity", err)
+		return
+	}
+}

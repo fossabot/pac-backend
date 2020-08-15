@@ -133,7 +133,7 @@ func (db *TalkDateDBStore) GetTalkDatesByEventID(eventID uint) ([]*TalkDate, err
 		Preload("Location").
 		Where(TalkDate{EventID: eventID}).
 		Find(&talkDates).Error; err != nil {
-		db.log.Error("Error getting all talkDates", "err", err)
+		db.log.Error("Error getting talkDates", "err", err)
 		return []*TalkDate{}, err
 	}
 

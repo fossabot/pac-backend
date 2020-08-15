@@ -23,6 +23,7 @@ type EventStore interface {
 	UpdateEvent(id uint, event *Event) (*Event, error)
 	AddEvent(event *Event) (*Event, error)
 	DeleteEventByID(id uint) error
+	GetEventsByTalkID(talkID uint) ([]*Event, error)
 }
 
 type EventDBStore struct {
@@ -116,4 +117,20 @@ func (db *EventDBStore) DeleteEventByID(id uint) error {
 
 	db.log.Debug("Successfully deleted event")
 	return nil
+}
+
+func (db *EventDBStore) GetEventsByTalkID(talkID uint) ([]*Event, error) {
+	db.log.Debug("Getting event by talk id...", "talkID", talkID)
+
+	var events []*Event
+	if err := db.
+		Preload("Location").
+		Where("id IN (?)", db.Table("talk_date").Select("event_id").Where("talk_id = ?", talkID).SubQuery()).
+		Find(&events).Error; err != nil {
+		db.log.Error("Error getting events", "err", err)
+		return []*Event{}, err
+	}
+
+	db.log.Debug("Returning events", "events", spew.Sprintf("%+v", events))
+	return events, nil
 }

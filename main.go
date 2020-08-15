@@ -121,6 +121,7 @@ func main() {
 	sm.Handle("/locations/{id:[0-9]+}", http.HandlerFunc(lh.DeleteLocation)).Methods("DELETE")
 	// Events
 	sm.Handle("/events", secureChain.Then(http.HandlerFunc(eh.GetEvents))).Methods("GET")
+	sm.Handle("/events/talk/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(eh.GetEventsByTalkID))).Methods("GET")
 	sm.Handle("/events/{id:[0-9]+}", http.HandlerFunc(eh.GetEvent)).Methods("GET")
 	sm.Handle("/events", jsonChain.Then(http.HandlerFunc(eh.CreateEvent))).Methods("POST")
 	sm.Handle("/events/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(eh.UpdateEvent))).Methods("PUT")

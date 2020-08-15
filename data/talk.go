@@ -147,7 +147,7 @@ func (db *TalkDBStore) GetTalksByEventID(eventID uint) ([]*Talk, error) {
 		Preload("Topics").
 		Where("id IN (?)", db.Table("talk_date").Select("talk_id").Where("event_id = ?", eventID).SubQuery()).
 		Find(&talks).Error; err != nil {
-		db.log.Error("Error getting all talks", "err", err)
+		db.log.Error("Error getting talks", "err", err)
 		return []*Talk{}, err
 	}
 
@@ -158,17 +158,6 @@ func (db *TalkDBStore) GetTalksByEventID(eventID uint) ([]*Talk, error) {
 func (db *TalkDBStore) GetTalksByPersonID(personID uint) ([]*Talk, error) {
 	db.log.Debug("Getting talks by person id...", "personID", personID)
 
-	var person Person
-	if err := db.First(&person, personID).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			db.log.Error("Person not found by id", "personID", personID)
-			return nil, &TalkNotFoundError{err}
-		} else {
-			db.log.Error("Unexpected error getting person by id", "err", err)
-			return nil, err
-		}
-	}
-
 	var talks []*Talk
 	if err := db.
 		Preload("Persons").
@@ -176,7 +165,7 @@ func (db *TalkDBStore) GetTalksByPersonID(personID uint) ([]*Talk, error) {
 		Preload("Topics").
 		Where("id IN (?)", db.Table("talks_at").Select("talk_id").Where("person_id = ?", personID).SubQuery()).
 		Find(&talks).Error; err != nil {
-		db.log.Error("Error getting all talks", "err", err)
+		db.log.Error("Error getting talks", "err", err)
 		return []*Talk{}, err
 	}
 
