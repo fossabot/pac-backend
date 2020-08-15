@@ -126,3 +126,19 @@ func (lh *TalkDatesHandler) DeleteTalkDate(rw http.ResponseWriter, r *http.Reque
 
 	rw.WriteHeader(http.StatusNoContent)
 }
+
+func (lh *TalkDatesHandler) GetTalkDatesByEventID(rw http.ResponseWriter, r *http.Request) {
+	eventID := readId(r)
+
+	talkDates, err := lh.store.GetTalkDateByID(eventID)
+	if err != nil {
+		writeJSONErrorWithStatus("Error getting entities", err.Error(), rw, http.StatusInternalServerError)
+		return
+	}
+
+	err = writeJSONWithStatus(talkDates, rw, http.StatusOK)
+	if err != nil {
+		lh.log.Error("Error serializing entity", err)
+		return
+	}
+}

@@ -32,6 +32,8 @@ type TalkStore interface {
 	UpdateTalk(id uint, talk *Talk) (*Talk, error)
 	AddTalk(talk *Talk) (*Talk, error)
 	DeleteTalkByID(id uint) error
+	GetTalksByEventID(eventID uint) ([]*Talk, error)
+	GetTalksByPersonID(personID uint) ([]*Talk, error)
 }
 
 type TalkDBStore struct {
@@ -54,7 +56,11 @@ func (db *TalkDBStore) GetTalks() ([]*Talk, error) {
 	db.log.Debug("Getting all talks...")
 
 	var talks []*Talk
-	if err := db.Preload("Location").Find(&talks).Error; err != nil {
+	if err := db.
+		Preload("Persons").
+		Preload("Persons.Organization").
+		Preload("Topics").
+		Find(&talks).Error; err != nil {
 		db.log.Error("Error getting all talks", "err", err)
 		return []*Talk{}, err
 	}
@@ -67,7 +73,11 @@ func (db *TalkDBStore) GetTalkByID(id uint) (*Talk, error) {
 	db.log.Debug("Getting talk by id...", "id", id)
 
 	var talk Talk
-	if err := db.Preload("Location").First(&talk, id).Error; err != nil {
+	if err := db.Preload("Persons").
+		Preload("Persons.Organization").
+		Preload("Topics").
+		Preload("Topics.Children").
+		First(&talk, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			db.log.Error("Talk not found by id", "id", id)
 			return nil, &TalkNotFoundError{err}
@@ -125,4 +135,51 @@ func (db *TalkDBStore) DeleteTalkByID(id uint) error {
 
 	db.log.Debug("Successfully deleted talk")
 	return nil
+}
+
+func (db *TalkDBStore) GetTalksByEventID(eventID uint) ([]*Talk, error) {
+	db.log.Debug("Getting talks by event id...", "eventID", eventID)
+
+	var talks []*Talk
+	if err := db.
+		Preload("Persons").
+		Preload("Persons.Organization").
+		Preload("Topics").
+		Where("id IN (?)", db.Table("talk_date").Select("talk_id").Where("event_id = ?", eventID).SubQuery()).
+		Find(&talks).Error; err != nil {
+		db.log.Error("Error getting all talks", "err", err)
+		return []*Talk{}, err
+	}
+
+	db.log.Debug("Returning talks", "talks", spew.Sprintf("%+v", talks))
+	return talks, nil
+}
+
+func (db *TalkDBStore) GetTalksByPersonID(personID uint) ([]*Talk, error) {
+	db.log.Debug("Getting talks by person id...", "personID", personID)
+
+	var person Person
+	if err := db.First(&person, personID).Error; err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			db.log.Error("Person not found by id", "personID", personID)
+			return nil, &TalkNotFoundError{err}
+		} else {
+			db.log.Error("Unexpected error getting person by id", "err", err)
+			return nil, err
+		}
+	}
+
+	var talks []*Talk
+	if err := db.
+		Preload("Persons").
+		Preload("Persons.Organization").
+		Preload("Topics").
+		Where("id IN (?)", db.Table("talks_at").Select("talk_id").Where("person_id = ?", personID).SubQuery()).
+		Find(&talks).Error; err != nil {
+		db.log.Error("Error getting all talks", "err", err)
+		return []*Talk{}, err
+	}
+
+	db.log.Debug("Returning talks", "talks", spew.Sprintf("%+v", talks))
+	return talks, nil
 }

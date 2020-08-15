@@ -151,12 +151,15 @@ func main() {
 	sm.Handle("/topics/{id:[0-9]+}", http.HandlerFunc(th.DeleteTopic)).Methods("DELETE")
 	// Talks
 	sm.Handle("/talks", secureChain.Then(http.HandlerFunc(tkh.GetTalks))).Methods("GET")
+	sm.Handle("/talks/event/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(tkh.GetTalksByEventID))).Methods("GET")
+	sm.Handle("/talks/person/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(tkh.GetTalksByPersonID))).Methods("GET")
 	sm.Handle("/talks/{id:[0-9]+}", http.HandlerFunc(tkh.GetTalk)).Methods("GET")
 	sm.Handle("/talks", jsonChain.Then(http.HandlerFunc(tkh.CreateTalk))).Methods("POST")
 	sm.Handle("/talks/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(tkh.UpdateTalk))).Methods("PUT")
 	sm.Handle("/talks/{id:[0-9]+}", http.HandlerFunc(tkh.DeleteTalk)).Methods("DELETE")
 	// Talk Dates
 	sm.Handle("/talkDates", secureChain.Then(http.HandlerFunc(tdh.GetTalkDates))).Methods("GET")
+	sm.Handle("/talkDates/event/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(tdh.GetTalkDatesByEventID))).Methods("GET")
 	sm.Handle("/talkDates/{id:[0-9]+}", http.HandlerFunc(tdh.GetTalkDate)).Methods("GET")
 	sm.Handle("/talkDates", jsonChain.Then(http.HandlerFunc(tdh.CreateTalkDate))).Methods("POST")
 	sm.Handle("/talkDates/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(tdh.UpdateTalkDate))).Methods("PUT")

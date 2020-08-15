@@ -27,6 +27,7 @@ type TalkDateStore interface {
 	UpdateTalkDate(id uint, talkDate *TalkDate) (*TalkDate, error)
 	AddTalkDate(talkDate *TalkDate) (*TalkDate, error)
 	DeleteTalkDateByID(id uint) error
+	GetTalkDatesByEventID(eventID uint) ([]*TalkDate, error)
 }
 
 type TalkDateDBStore struct {
@@ -120,4 +121,22 @@ func (db *TalkDateDBStore) DeleteTalkDateByID(id uint) error {
 
 	db.log.Debug("Successfully deleted talkDate")
 	return nil
+}
+
+func (db *TalkDateDBStore) GetTalkDatesByEventID(eventID uint) ([]*TalkDate, error) {
+	db.log.Debug("Getting talkDates by id...", "eventID", eventID)
+
+	var talkDates []*TalkDate
+	if err := db.Preload("Talk").
+		Preload("Room").
+		Preload("Event").
+		Preload("Location").
+		Where(TalkDate{EventID: eventID}).
+		Find(&talkDates).Error; err != nil {
+		db.log.Error("Error getting all talkDates", "err", err)
+		return []*TalkDate{}, err
+	}
+
+	db.log.Debug("Returning talkDates", "talkDates", spew.Sprintf("%+v", talkDates))
+	return talkDates, nil
 }

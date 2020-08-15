@@ -127,3 +127,34 @@ func (lh *TalksHandler) DeleteTalk(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusNoContent)
 }
 
+func (lh *TalksHandler) GetTalksByEventID(rw http.ResponseWriter, r *http.Request) {
+	eventID := readId(r)
+
+	talks, err := lh.store.GetTalksByEventID(eventID)
+	if err != nil {
+		writeJSONErrorWithStatus("Error getting entities", err.Error(), rw, http.StatusInternalServerError)
+		return
+	}
+
+	err = writeJSONWithStatus(talks, rw, http.StatusOK)
+	if err != nil {
+		lh.log.Error("Error serializing entity", err)
+		return
+	}
+}
+
+func (lh *TalksHandler) GetTalksByPersonID(rw http.ResponseWriter, r *http.Request) {
+	personID := readId(r)
+
+	talks, err := lh.store.GetTalksByPersonID(personID)
+	if err != nil {
+		writeJSONErrorWithStatus("Error getting entities", err.Error(), rw, http.StatusInternalServerError)
+		return
+	}
+
+	err = writeJSONWithStatus(talks, rw, http.StatusOK)
+	if err != nil {
+		lh.log.Error("Error serializing entity", err)
+		return
+	}
+}

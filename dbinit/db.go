@@ -70,12 +70,12 @@ func DB(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.Organiza
 	})
 	hibernateTopic, _ := ts.AddTopic(&data.Topic{
 		ID:       2,
-		Name:     "Java",
+		Name:     "Hibernate",
 		Children: []data.Topic{*javaTopic},
 	})
 	springTopic, _ := ts.AddTopic(&data.Topic{
 		ID:       3,
-		Name:     "Java",
+		Name:     "Spring",
 		Children: []data.Topic{*javaTopic, *hibernateTopic},
 	})
 	kubernetesTopic, _ := ts.AddTopic(&data.Topic{
