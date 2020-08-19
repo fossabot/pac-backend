@@ -11,8 +11,8 @@ type Event struct {
 	// gorm.Model
 	ID         uint      `json:"id" gorm:"primary_key;auto_increment"`
 	Name       string    `json:"name"`
-	BeginDate  time.Time `json:"begin_date"`
-	EndDate    time.Time `json:"end_date"`
+	BeginDate  time.Time `json:"beginDate"`
+	EndDate    time.Time `json:"endDate"`
 	LocationID uint      `json:"-"`
 	Location   Location  `gorm:"foreignkey:LocationID"`
 }
