@@ -11,7 +11,7 @@ type Room struct {
 	ID             uint         `json:"id" gorm:"primary_key;auto_increment"`
 	Name           string       `json:"name"`
 	OrganizationID uint         `json:"-"`
-	Organization   Organization `gorm:"foreignkey:OrganizationID"`
+	Organization   Organization `json:"organization" gorm:"foreignkey:OrganizationID"`
 }
 
 type RoomStore interface {

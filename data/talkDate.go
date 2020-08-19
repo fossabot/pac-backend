@@ -10,15 +10,15 @@ import (
 type TalkDate struct {
 	// gorm.Model
 	ID         uint      `json:"id" gorm:"primary_key;auto_increment"`
-	BeginDate  time.Time `json:"begin_date"`
+	BeginDate  time.Time `json:"beginDate"`
 	TalkID     uint      `json:"-"`
-	Talk       Talk      `gorm:"foreignkey:TalkID"`
+	Talk       Talk      `json:"talk" gorm:"foreignkey:TalkID"`
 	RoomID     uint      `json:"-"`
-	Room       Room      `gorm:"foreignkey:RoomID"`
+	Room       Room      `json:"room" gorm:"foreignkey:RoomID"`
 	EventID    uint      `json:"-"`
-	Event      Event     `gorm:"foreignkey:EventID"`
+	Event      Event     `json:"event" gorm:"foreignkey:EventID"`
 	LocationID uint      `json:"-"`
-	Location   Location  `gorm:"foreignkey:LocationID"`
+	Location   Location  `json:"location" gorm:"foreignkey:LocationID"`
 }
 
 type TalkDateStore interface {

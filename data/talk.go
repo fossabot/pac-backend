@@ -13,9 +13,9 @@ type Talk struct {
 	DurationInMinutes uint       `json:"durationInMinutes"`
 	Language          string     `json:"language"`
 	Level             TalkLevel  `json:"level"`
-	Persons           []Person   `gorm:"many2many:talks_at;"`
-	Topics            []Topic    `gorm:"many2many:talk_topic;"`
-	TalkDates         []TalkDate `gorm:"foreignkey:TalkID;"`
+	Persons           []Person   `json:"persons" gorm:"many2many:talks_at;"`
+	Topics            []Topic    `json:"topics" gorm:"many2many:talk_topic;"`
+	TalkDates         []TalkDate `json:"talkDates" gorm:"foreignkey:TalkID;"`
 }
 
 type TalkLevel string

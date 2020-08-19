@@ -14,7 +14,7 @@ type Event struct {
 	BeginDate  time.Time `json:"beginDate"`
 	EndDate    time.Time `json:"endDate"`
 	LocationID uint      `json:"-"`
-	Location   Location  `gorm:"foreignkey:LocationID"`
+	Location   Location  `json:"location" gorm:"foreignkey:LocationID"`
 }
 
 type EventStore interface {
