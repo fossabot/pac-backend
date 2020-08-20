@@ -19,6 +19,7 @@ type TopicStore interface {
 	UpdateTopic(id uint, topic *Topic) (*Topic, error)
 	AddTopic(topic *Topic) (*Topic, error)
 	DeleteTopicByID(id uint) error
+	GetTopicsByEventID(eventID uint) ([]*Topic, error)
 }
 
 type TopicDBStore struct {
@@ -112,4 +113,23 @@ func (db *TopicDBStore) DeleteTopicByID(id uint) error {
 
 	db.log.Debug("Successfully deleted topic")
 	return nil
+}
+
+func (db *TopicDBStore) GetTopicsByEventID(eventID uint) ([]*Topic, error) {
+	db.log.Debug("Getting topics by event id...", "eventID", eventID)
+
+	var topics []*Topic
+	if err := db.
+		Table("topic").
+		Preload("Children").
+		Joins("JOIN talk_topic ON talk_topic.topic_id = topic.id").
+		Joins("JOIN talk_date ON talk_date.talk_id = talk_topic.talk_id").
+		Where("talk_date.event_id = ?", eventID).
+		Find(&topics).Error; err != nil {
+			db.log.Error("Error getting topics", "err", err)
+			return []*Topic{}, err
+	}
+
+	db.log.Debug("Returning topics", "topics", spew.Sprintf("%+v", topics))
+	return topics, nil
 }

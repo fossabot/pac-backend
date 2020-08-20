@@ -146,6 +146,7 @@ func main() {
 	sm.Handle("/rooms/{id:[0-9]+}", http.HandlerFunc(rh.DeleteRoom)).Methods("DELETE")
 	// Topics
 	sm.Handle("/topics", secureChain.Then(http.HandlerFunc(th.GetTopics))).Methods("GET")
+	sm.Handle("/topics/event/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(th.GetTopicsByEventID))).Methods("GET")
 	sm.Handle("/topics/{id:[0-9]+}", http.HandlerFunc(th.GetTopic)).Methods("GET")
 	sm.Handle("/topics", jsonChain.Then(http.HandlerFunc(th.CreateTopic))).Methods("POST")
 	sm.Handle("/topics/{id:[0-9]+}", jsonChain.Then(http.HandlerFunc(th.UpdateTopic))).Methods("PUT")

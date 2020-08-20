@@ -127,3 +127,18 @@ func (lh *TopicsHandler) DeleteTopic(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusNoContent)
 }
 
+func (lh *TopicsHandler) GetTopicsByEventID(rw http.ResponseWriter, r *http.Request) {
+	eventID := readId(r)
+
+	events, err := lh.store.GetTopicsByEventID(eventID)
+	if err != nil {
+		writeJSONErrorWithStatus("Error getting entities", err.Error(), rw, http.StatusInternalServerError)
+		return
+	}
+
+	err = writeJSONWithStatus(events, rw, http.StatusOK)
+	if err != nil {
+		lh.log.Error("Error serializing entity", err)
+		return
+	}
+}
