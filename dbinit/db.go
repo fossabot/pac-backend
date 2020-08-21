@@ -19,130 +19,232 @@ func DB(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.Organiza
 	db.Delete(data.TalkDate{})
 
 	// Locations
-	belexpoLocation, _ := ls.AddLocation(&data.Location{
+	locationBelexpo, _ := ls.AddLocation(&data.Location{
 		ID:   1,
 		Name: "Belexpo Centar",
 	})
-	hotelPlazaLocation, _ := ls.AddLocation(&data.Location{
+	locationHotelPlaza, _ := ls.AddLocation(&data.Location{
 		ID:   2,
 		Name: "Hotel Plaza",
 	})
+	locationBelgradeFair, _ := ls.AddLocation(&data.Location{
+		ID:   3,
+		Name: "Belgrade Fair Building One",
+	})
 
 	// Events
-	bestJavaConf, _ := es.AddEvent(&data.Event{
+	eventBestJavaConference, _ := es.AddEvent(&data.Event{
 		ID:         1,
 		Name:       "Best Java Conference",
 		BeginDate:  time.Date(2021, time.Month(2), 12, 0, 0, 0, 0, time.UTC),
 		EndDate:    time.Date(2021, time.Month(2), 14, 0, 0, 0, 0, time.UTC),
-		LocationID: belexpoLocation.ID,
+		LocationID: locationBelexpo.ID,
 	})
-	prodynaConf, _ := es.AddEvent(&data.Event{
+	eventProdynaJobFair, _ := es.AddEvent(&data.Event{
 		ID:         2,
 		Name:       "Prodyna Job Fair",
 		BeginDate:  time.Date(2021, time.Month(5), 2, 0, 0, 0, 0, time.UTC),
 		EndDate:    time.Date(2021, time.Month(6), 5, 0, 0, 0, 0, time.UTC),
-		LocationID: hotelPlazaLocation.ID,
+		LocationID: locationHotelPlaza.ID,
+	})
+	eventITConnect, _ := es.AddEvent(&data.Event{
+		ID:         3,
+		Name:       "IT Connect",
+		BeginDate:  time.Date(2021, time.Month(5), 10, 0, 0, 0, 0, time.UTC),
+		EndDate:    time.Date(2021, time.Month(5), 12, 0, 0, 0, 0, time.UTC),
+		LocationID: locationHotelPlaza.ID,
+	})
+	/*eventCloudnativeConference*/ _, _ = es.AddEvent(&data.Event{
+		ID:         4,
+		Name:       "Prodyna Job Fair",
+		BeginDate:  time.Date(2021, time.Month(5), 22, 0, 0, 0, 0, time.UTC),
+		EndDate:    time.Date(2021, time.Month(5), 23, 0, 0, 0, 0, time.UTC),
+		LocationID: locationBelgradeFair.ID,
+	})
+	eventGoogleIO, _ := es.AddEvent(&data.Event{
+		ID:         5,
+		Name:       "Google I/O",
+		BeginDate:  time.Date(2021, time.Month(6), 2, 0, 0, 0, 0, time.UTC),
+		EndDate:    time.Date(2021, time.Month(6), 5, 0, 0, 0, 0, time.UTC),
+		LocationID: locationBelgradeFair.ID,
 	})
 
 	// Organizations
-	prodyna, _ := os.AddOrganization(&data.Organization{
+	organizationProdyna, _ := os.AddOrganization(&data.Organization{
 		ID:   1,
 		Name: "Prodyna",
 	})
+	// Organizations
+	organizationGoogle, _ := os.AddOrganization(&data.Organization{
+		ID:   2,
+		Name: "Google",
+	})
 
 	// Rooms
-	redRoom, _ := rs.AddRoom(&data.Room{
+	roomRed, _ := rs.AddRoom(&data.Room{
 		ID:             1,
 		Name:           "Red Room",
-		OrganizationID: prodyna.ID,
+		OrganizationID: organizationProdyna.ID,
 	})
-	whiteRoom, _ := rs.AddRoom(&data.Room{
+	roomWhite, _ := rs.AddRoom(&data.Room{
 		ID:             2,
 		Name:           "White Room",
-		OrganizationID: prodyna.ID,
+		OrganizationID: organizationProdyna.ID,
+	})
+	roomBlue, _ := rs.AddRoom(&data.Room{
+		ID:             3,
+		Name:           "Blue Room",
+		OrganizationID: organizationProdyna.ID,
+	})
+	roomGoogle, _ := rs.AddRoom(&data.Room{
+		ID:             4,
+		Name:           "Google Room",
+		OrganizationID: organizationGoogle.ID,
 	})
 
 	// Topics
-	javaTopic, _ := ts.AddTopic(&data.Topic{
+	topicJava, _ := ts.AddTopic(&data.Topic{
 		ID:       1,
 		Name:     "Java",
 		Children: nil,
 	})
-	hibernateTopic, _ := ts.AddTopic(&data.Topic{
+	topicHibernate, _ := ts.AddTopic(&data.Topic{
 		ID:       2,
 		Name:     "Hibernate",
-		Children: []data.Topic{*javaTopic},
+		Children: []data.Topic{*topicJava},
 	})
-	springTopic, _ := ts.AddTopic(&data.Topic{
+	topicSpring, _ := ts.AddTopic(&data.Topic{
 		ID:       3,
 		Name:     "Spring",
-		Children: []data.Topic{*javaTopic, *hibernateTopic},
+		Children: []data.Topic{*topicJava, *topicHibernate},
 	})
-	kubernetesTopic, _ := ts.AddTopic(&data.Topic{
+	topicKubernetes, _ := ts.AddTopic(&data.Topic{
 		ID:       4,
 		Name:     "Kubernetes",
 		Children: nil,
 	})
-	jsTopic, _ := ts.AddTopic(&data.Topic{
+	topicJavaScript, _ := ts.AddTopic(&data.Topic{
 		ID:       5,
 		Name:     "JavaScript",
 		Children: nil,
 	})
+	topicJobMarket, _ := ts.AddTopic(&data.Topic{
+		ID:       6,
+		Name:     "Job Market",
+		Children: nil,
+	})
 
 	// Persons
-	dkrizic, _ := ps.AddPerson(&data.Person{
+	speakerDKrizic, _ := ps.AddPerson(&data.Person{
 		ID:             1,
 		Name:           "Darko Krizic",
-		OrganizationID: prodyna.ID,
+		OrganizationID: organizationProdyna.ID,
 	})
-	ggrujic, _ := ps.AddPerson(&data.Person{
+	speakerGGrujic, _ := ps.AddPerson(&data.Person{
 		ID:             2,
 		Name:           "Goran Grujic",
-		OrganizationID: prodyna.ID,
+		OrganizationID: organizationProdyna.ID,
 	})
-	mnikolic, _ := ps.AddPerson(&data.Person{
+	speakerMNikolic, _ := ps.AddPerson(&data.Person{
 		ID:             3,
 		Name:           "Milos Nikolic",
-		OrganizationID: prodyna.ID,
+		OrganizationID: organizationProdyna.ID,
+	})
+	speakerAKoblin, _ := ps.AddPerson(&data.Person{
+		ID:             4,
+		Name:           "Aaron Koblin",
+		OrganizationID: organizationGoogle.ID,
 	})
 
 	// Talks
-	javaSpringAndYouTalk, _ := tlks.AddTalk(&data.Talk{
+	talkJavaSpringAndYou, _ := tlks.AddTalk(&data.Talk{
 		ID:                1,
 		Title:             "Java, Spring, and You",
 		DurationInMinutes: 90,
 		Language:          "English",
 		Level:             data.BeginnerLevel,
-		Persons:           []data.Person{*dkrizic, *ggrujic},
-		Topics:            []data.Topic{*javaTopic, *springTopic, *hibernateTopic},
+		Persons:           []data.Person{*speakerDKrizic, *speakerGGrujic},
+		Topics:            []data.Topic{*topicJava, *topicSpring, *topicHibernate},
 		TalkDates:         nil,
 	})
-	fullStackJavaScriptOnKubernetesTalk, _ := tlks.AddTalk(&data.Talk{
+	talkFullStackJavaScriptOnKubernetes, _ := tlks.AddTalk(&data.Talk{
 		ID:                2,
 		Title:             "Fullstack JavaScript on Kubernetes",
 		DurationInMinutes: 60,
 		Language:          "Serbian",
 		Level:             data.ExpertLevel,
-		Persons:           []data.Person{*mnikolic},
-		Topics:            []data.Topic{*jsTopic, *kubernetesTopic},
+		Persons:           []data.Person{*speakerMNikolic},
+		Topics:            []data.Topic{*topicJavaScript, *topicKubernetes},
+		TalkDates:         nil,
+	})
+	talkJavaForBeginners, _ := tlks.AddTalk(&data.Talk{
+		ID:                3,
+		Title:             "Java for Beginners",
+		DurationInMinutes: 60,
+		Language:          "English",
+		Level:             data.BeginnerLevel,
+		Persons:           []data.Person{*speakerGGrujic},
+		Topics:            []data.Topic{*topicJava},
+		TalkDates:         nil,
+	})
+	talkITJobMarketToday, _ := tlks.AddTalk(&data.Talk{
+		ID:                4,
+		Title:             "The IT Job Market Today",
+		DurationInMinutes: 60,
+		Language:          "English",
+		Level:             data.BeginnerLevel,
+		Persons:           []data.Person{*speakerAKoblin},
+		Topics:            []data.Topic{*topicJava, *topicJobMarket},
 		TalkDates:         nil,
 	})
 
 	// TalkDates
 	_, _ = tlkds.AddTalkDate(&data.TalkDate{
 		ID:         1,
-		BeginDate:  time.Date(2021, time.Month(2), 12, 14, 0, 0, 0, time.UTC),
-		TalkID:     javaSpringAndYouTalk.ID,
-		RoomID:     redRoom.ID,
-		EventID:    bestJavaConf.ID,
-		LocationID: belexpoLocation.ID,
+		BeginDate:  time.Date(2021, time.Month(5), 12, 14, 0, 0, 0, time.UTC),
+		TalkID:     talkJavaSpringAndYou.ID,
+		RoomID:     roomRed.ID,
+		EventID:    eventBestJavaConference.ID,
+		LocationID: locationBelexpo.ID,
 	})
 	_, _ = tlkds.AddTalkDate(&data.TalkDate{
 		ID:         2,
 		BeginDate:  time.Date(2021, time.Month(5), 2, 10, 0, 0, 0, time.UTC),
-		TalkID:     fullStackJavaScriptOnKubernetesTalk.ID,
-		RoomID:     whiteRoom.ID,
-		EventID:    prodynaConf.ID,
-		LocationID: hotelPlazaLocation.ID,
+		TalkID:     talkFullStackJavaScriptOnKubernetes.ID,
+		RoomID:     roomWhite.ID,
+		EventID:    eventProdynaJobFair.ID,
+		LocationID: locationHotelPlaza.ID,
+	})
+	_, _ = tlkds.AddTalkDate(&data.TalkDate{
+		ID:         3,
+		BeginDate:  time.Date(2021, time.Month(5), 2, 13, 0, 0, 0, time.UTC),
+		TalkID:     talkJavaForBeginners.ID,
+		RoomID:     roomWhite.ID,
+		EventID:    eventProdynaJobFair.ID,
+		LocationID: locationHotelPlaza.ID,
+	})
+	_, _ = tlkds.AddTalkDate(&data.TalkDate{
+		ID:         4,
+		BeginDate:  time.Date(2021, time.Month(5), 10, 14, 0, 0, 0, time.UTC),
+		TalkID:     talkJavaForBeginners.ID,
+		RoomID:     roomBlue.ID,
+		EventID:    eventITConnect.ID,
+		LocationID: locationHotelPlaza.ID,
+	})
+	_, _ = tlkds.AddTalkDate(&data.TalkDate{
+		ID:         5,
+		BeginDate:  time.Date(2021, time.Month(6), 2, 15, 0, 0, 0, time.UTC),
+		TalkID:     talkITJobMarketToday.ID,
+		RoomID:     roomGoogle.ID,
+		EventID:    eventGoogleIO.ID,
+		LocationID: locationBelgradeFair.ID,
+	})
+	_, _ = tlkds.AddTalkDate(&data.TalkDate{
+		ID:         6,
+		BeginDate:  time.Date(2021, time.Month(5), 10, 12, 0, 0, 0, time.UTC),
+		TalkID:     talkITJobMarketToday.ID,
+		RoomID:     roomBlue.ID,
+		EventID:    eventITConnect.ID,
+		LocationID: locationHotelPlaza.ID,
 	})
 }

@@ -60,6 +60,9 @@ func (db *TalkDBStore) GetTalks() ([]*Talk, error) {
 		Preload("Persons").
 		Preload("Persons.Organization").
 		Preload("Topics").
+		Preload("Topics.Children").
+		Preload("TalkDates").
+		Preload("TalkDates.Event").
 		Find(&talks).Error; err != nil {
 		db.log.Error("Error getting all talks", "err", err)
 		return []*Talk{}, err
@@ -77,6 +80,8 @@ func (db *TalkDBStore) GetTalkByID(id uint) (*Talk, error) {
 		Preload("Persons.Organization").
 		Preload("Topics").
 		Preload("Topics.Children").
+		Preload("TalkDates").
+		Preload("TalkDates.Event").
 		First(&talk, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			db.log.Error("Talk not found by id", "id", id)
@@ -145,6 +150,9 @@ func (db *TalkDBStore) GetTalksByEventID(eventID uint) ([]*Talk, error) {
 		Preload("Persons").
 		Preload("Persons.Organization").
 		Preload("Topics").
+		Preload("Topics.Children").
+		Preload("TalkDates").
+		Preload("TalkDates.Event").
 		Where("id IN (?)", db.Table("talk_date").Select("talk_id").Where("event_id = ?", eventID).SubQuery()).
 		Find(&talks).Error; err != nil {
 		db.log.Error("Error getting talks", "err", err)

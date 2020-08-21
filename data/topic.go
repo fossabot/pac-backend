@@ -121,6 +121,7 @@ func (db *TopicDBStore) GetTopicsByEventID(eventID uint) ([]*Topic, error) {
 	var topics []*Topic
 	if err := db.
 		Table("topic").
+		Select("DISTINCT *").
 		Preload("Children").
 		Joins("JOIN talk_topic ON talk_topic.topic_id = topic.id").
 		Joins("JOIN talk_date ON talk_date.talk_id = talk_topic.talk_id").
