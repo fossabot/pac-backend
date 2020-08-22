@@ -2,19 +2,15 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/coreos/go-oidc"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/go-hclog"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"  //mysql database driver
-	_ "github.com/jinzhu/gorm/dialects/sqlite" //sqlite database driver
 	"github.com/justinas/alice"
 	"github.com/milutindzunic/pac-backend/auth"
 	"github.com/milutindzunic/pac-backend/config"
 	"github.com/milutindzunic/pac-backend/data"
+	"github.com/milutindzunic/pac-backend/database"
 	"github.com/milutindzunic/pac-backend/handlers"
-	"github.com/milutindzunic/pac-backend/dbinit"
 	"github.com/milutindzunic/pac-backend/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
@@ -24,16 +20,12 @@ import (
 	"time"
 )
 
-func healthHandler(rw http.ResponseWriter, r *http.Request) {
-	rw.WriteHeader(http.StatusNoContent)
-}
-
 func main() {
 
 	// load the configuration
 	cnf, err := config.LoadConfig()
 	if err != nil {
-		log.Println("Failed to read config")
+		log.Println("Failed to load config")
 		panic(err)
 	}
 	log.Printf("Loaded config: %+v\n", cnf)
@@ -46,24 +38,12 @@ func main() {
 	})
 
 	// connect to database, defer closing
-	db, err := openDB(cnf)
+	db, err := database.OpenDB(cnf)
 	if err != nil {
 		logger.Error("Failed to connect to database", "err", err)
 		panic(err)
 	}
-	db.SingularTable(true)
-	db.LogMode(cnf.LogPersistence)
 	defer db.Close()
-
-	// Keep the schema up to date
-	db = db.AutoMigrate(&data.Location{})
-	db = db.AutoMigrate(&data.Event{})
-	db = db.AutoMigrate(&data.Organization{})
-	db = db.AutoMigrate(&data.Person{})
-	db = db.AutoMigrate(&data.Room{})
-	db = db.AutoMigrate(&data.Topic{})
-	db = db.AutoMigrate(&data.Talk{})
-	db = db.AutoMigrate(&data.TalkDate{})
 
 	// create stores
 	var locationStore data.LocationStore = data.NewLocationDBStore(db, logger)
@@ -76,6 +56,7 @@ func main() {
 	var talkDateStore data.TalkDateStore = data.NewTalkDateDBStore(db, logger)
 
 	// create handlers
+	hh := handlers.NewHealthHandler(db, logger)
 	lh := handlers.NewLocationsHandler(locationStore, logger)
 	eh := handlers.NewEventsHandler(eventStore, logger)
 	oh := handlers.NewOrganizationsHandler(organizationStore, logger)
@@ -85,8 +66,8 @@ func main() {
 	tkh := handlers.NewTalksHandler(talkStore, logger)
 	tdh := handlers.NewTalkDatesHandler(talkDateStore, logger)
 
-	// TODO zasad ovde
-	dbinit.DB(db, locationStore, eventStore, organizationStore, personStore, roomStore, topicStore, talkStore, talkDateStore)
+	// TODO zasad ovde, napravi endpoint za initicijalizaciju
+	database.Init(db, locationStore, eventStore, organizationStore, personStore, roomStore, topicStore, talkStore, talkDateStore)
 
 	sm := mux.NewRouter()
 
@@ -105,17 +86,18 @@ func main() {
 	}
 
 	// Handler chains
-	defaultChain := alice.New(middleware.CORSMiddleware)
-	secureChain := alice.New(middleware.CORSMiddleware, middleware.EnforceJsonContentType)
+	defaultChain := alice.New(middleware.Prometheus, middleware.AllowCORS)
+	secureChain := defaultChain.Append(middleware.EnforceJsonContentType)
 	secureJsonChain := secureChain
 	if cnf.OAuthEnable {
-		secureJsonChain = alice.New(oauth.Middleware)
+		secureJsonChain = secureChain.Append(oauth.Middleware)
 	}
 
 	// Register handlers
-	sm.HandleFunc("/", healthHandler)
+	// Health
+	sm.HandleFunc("/", hh.Handle)
 	// Locations
-	sm.Handle("/locations", defaultChain.Then(http.HandlerFunc(lh.GetLocations))).Methods("GET")
+	sm.Handle("/locations", defaultChain.Then(http.HandlerFunc(lh.GetLocations))).Methods("GET").Name("GetLocations")
 	sm.Handle("/locations/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(lh.GetLocation))).Methods("GET")
 	sm.Handle("/locations", secureJsonChain.Then(http.HandlerFunc(lh.CreateLocation))).Methods("POST")
 	sm.Handle("/locations/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(lh.UpdateLocation))).Methods("PUT")
@@ -206,21 +188,4 @@ func main() {
 	logger.Info("Shutting down server...")
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	s.Shutdown(ctx)
-}
-
-func openDB(cnf *config.Config) (*gorm.DB, error) {
-	var dbUrl string
-
-	switch cnf.DbDriver {
-	case "sqlite3":
-		dbUrl = cnf.DbName
-		log.Println("Connecting to embedded sqlite3 database... file name: " + dbUrl)
-	case "mysql":
-		dbUrl = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", cnf.DbUser, cnf.DbPassword, cnf.DbHost, cnf.DbPort, cnf.DbName)
-		log.Println("Connecting to mysql database... uri: " + dbUrl)
-	default:
-		return nil, fmt.Errorf("error! Database driver must be one of: [sqlite3, mysql], was %s", cnf.DbDriver)
-	}
-
-	return gorm.Open(cnf.DbDriver, dbUrl)
 }

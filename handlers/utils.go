@@ -29,17 +29,39 @@ func readJSON(rc io.Reader, dst interface{}) error {
 }
 
 func writeJSONWithStatus(i interface{}, rw http.ResponseWriter, status int) error {
-	rw.WriteHeader(status)
-	rw.Header().Set("Content-Type", "application/json")
-	return json.NewEncoder(rw).Encode(i)
+
+	err := writeJson(i, rw, status)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func writeJSONErrorWithStatus(message string, cause string, rw http.ResponseWriter, status int) {
 
 	errorResponse := ErrorResponse{message, cause}
-	rw.WriteHeader(status)
+	writeJson(errorResponse, rw, status)
+}
+
+func writeJson(i interface{}, rw http.ResponseWriter, status int) error {
+
+	jsonBytes, err := json.Marshal(i)
+	if err != nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
 	rw.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(rw).Encode(&errorResponse)
+
+	rw.WriteHeader(status)
+	responseLength, err := rw.Write(jsonBytes)
+	if err != nil {
+		return err
+	}
+
+	rw.Header().Set("Content-Length", strconv.Itoa(responseLength))
+	return nil
 }
 
 func readId(r *http.Request) uint {

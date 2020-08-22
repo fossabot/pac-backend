@@ -1,4 +1,4 @@
-package dbinit
+package database
 
 import (
 	"github.com/jinzhu/gorm"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func DB(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.OrganizationStore, ps data.PersonStore, rs data.RoomStore, ts data.TopicStore, tlks data.TalkStore, tlkds data.TalkDateStore) {
+func Init(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.OrganizationStore, ps data.PersonStore, rs data.RoomStore, ts data.TopicStore, tlks data.TalkStore, tlkds data.TalkDateStore) {
 
 	// Parameter objects do not have primary keys - gorm will delete all the records!
 	db.Delete(data.Location{})
