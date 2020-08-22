@@ -125,7 +125,7 @@ func (db *EventDBStore) GetEventsByTalkID(talkID uint) ([]*Event, error) {
 	var events []*Event
 	if err := db.
 		Preload("Location").
-		Where("id IN (?)", db.Table("talk_date").Select("event_id").Where("talk_id = ?", talkID).SubQuery()).
+		Where("id IN ?", db.Table("talk_date").Select("event_id").Where("talk_id = ?", talkID).SubQuery()).
 		Find(&events).Error; err != nil {
 		db.log.Error("Error getting events", "err", err)
 		return []*Event{}, err

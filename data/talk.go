@@ -147,13 +147,14 @@ func (db *TalkDBStore) GetTalksByEventID(eventID uint) ([]*Talk, error) {
 
 	var talks []*Talk
 	if err := db.
+		Table("talk").
 		Preload("Persons").
 		Preload("Persons.Organization").
 		Preload("Topics").
 		Preload("Topics.Children").
 		Preload("TalkDates").
 		Preload("TalkDates.Event").
-		Where("id IN (?)", db.Table("talk_date").Select("talk_id").Where("event_id = ?", eventID).SubQuery()).
+		Where("id IN ?", db.Table("talk_date").Select("talk_id").Where("event_id = ?", eventID).SubQuery()).
 		Find(&talks).Error; err != nil {
 		db.log.Error("Error getting talks", "err", err)
 		return []*Talk{}, err
@@ -171,7 +172,7 @@ func (db *TalkDBStore) GetTalksByPersonID(personID uint) ([]*Talk, error) {
 		Preload("Persons").
 		Preload("Persons.Organization").
 		Preload("Topics").
-		Where("id IN (?)", db.Table("talks_at").Select("talk_id").Where("person_id = ?", personID).SubQuery()).
+		Where("id IN ?", db.Table("talks_at").Select("talk_id").Where("person_id = ?", personID).SubQuery()).
 		Find(&talks).Error; err != nil {
 		db.log.Error("Error getting talks", "err", err)
 		return []*Talk{}, err
