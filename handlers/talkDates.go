@@ -62,8 +62,6 @@ func (lh *TalkDatesHandler) CreateTalkDate(rw http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// TODO validacija ako treba
-
 	talkDate, err = lh.store.AddTalkDate(talkDate)
 	if err != nil {
 		writeJSONErrorWithStatus("Error creating entity", err.Error(), rw, http.StatusBadRequest)
@@ -87,8 +85,6 @@ func (lh *TalkDatesHandler) UpdateTalkDate(rw http.ResponseWriter, r *http.Reque
 		writeJSONErrorWithStatus("Error deserializing entity", err.Error(), rw, http.StatusBadRequest)
 		return
 	}
-
-	// TODO validacija ako treba
 
 	talkDate, err = lh.store.UpdateTalkDate(id, talkDate)
 	if err != nil {

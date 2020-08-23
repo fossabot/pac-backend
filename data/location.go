@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-playground/validator/v10"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jinzhu/gorm"
 )
@@ -9,7 +10,7 @@ import (
 type Location struct {
 	// gorm.Model
 	ID   uint   `json:"id" gorm:"primary_key;auto_increment"`
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required" gorm:"not null"`
 }
 
 type LocationStore interface {
@@ -22,6 +23,7 @@ type LocationStore interface {
 
 type LocationDBStore struct {
 	*gorm.DB
+	validate *validator.Validate
 	log hclog.Logger
 }
 
@@ -33,7 +35,7 @@ func (e LocationNotFoundError) Error() string { return "Location not found! Caus
 func (e LocationNotFoundError) Unwrap() error { return e.Cause }
 
 func NewLocationDBStore(db *gorm.DB, log hclog.Logger) *LocationDBStore {
-	return &LocationDBStore{db, log}
+	return &LocationDBStore{db, validator.New(), log}
 }
 
 func (db *LocationDBStore) GetLocations() ([]*Location, error) {
@@ -70,6 +72,12 @@ func (db *LocationDBStore) GetLocationByID(id uint) (*Location, error) {
 func (db *LocationDBStore) UpdateLocation(id uint, location *Location) (*Location, error) {
 	db.log.Debug("Updating location...", "location", hclog.Fmt("%+v", location))
 
+	err := db.validate.Struct(location)
+	if err != nil {
+		db.log.Error("Error validating location", "err", err)
+		return nil, err
+	}
+
 	if err := db.Model(&Location{}).Where("id = ?", id).Take(&Location{}).Update(location).First(&location, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			db.log.Error("Location to be updated not found", "location", hclog.Fmt("%+v", location))
@@ -86,6 +94,12 @@ func (db *LocationDBStore) UpdateLocation(id uint, location *Location) (*Locatio
 
 func (db *LocationDBStore) AddLocation(location *Location) (*Location, error) {
 	db.log.Debug("Adding location...", "location", hclog.Fmt("%+v", location))
+
+	err := db.validate.Struct(location)
+	if err != nil {
+		db.log.Error("Error validating location", "err", err)
+		return nil, err
+	}
 
 	if err := db.Create(&location).Error; err != nil {
 		db.log.Error("Unexpected error creating location", "err", err)

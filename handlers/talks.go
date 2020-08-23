@@ -62,8 +62,6 @@ func (lh *TalksHandler) CreateTalk(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO validacija ako treba
-
 	talk, err = lh.store.AddTalk(talk)
 	if err != nil {
 		writeJSONErrorWithStatus("Error creating entity", err.Error(), rw, http.StatusBadRequest)
@@ -87,8 +85,6 @@ func (lh *TalksHandler) UpdateTalk(rw http.ResponseWriter, r *http.Request) {
 		writeJSONErrorWithStatus("Error deserializing entity", err.Error(), rw, http.StatusBadRequest)
 		return
 	}
-
-	// TODO validacija ako treba
 
 	talk, err = lh.store.UpdateTalk(id, talk)
 	if err != nil {

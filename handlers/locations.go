@@ -62,8 +62,6 @@ func (lh *LocationsHandler) CreateLocation(rw http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// TODO validacija ako treba
-
 	location, err = lh.store.AddLocation(location)
 	if err != nil {
 		writeJSONErrorWithStatus("Error creating entity", err.Error(), rw, http.StatusBadRequest)
@@ -87,8 +85,6 @@ func (lh *LocationsHandler) UpdateLocation(rw http.ResponseWriter, r *http.Reque
 		writeJSONErrorWithStatus("Error deserializing entity", err.Error(), rw, http.StatusBadRequest)
 		return
 	}
-
-	// TODO validacija ako treba
 
 	location, err = lh.store.UpdateLocation(id, location)
 	if err != nil {

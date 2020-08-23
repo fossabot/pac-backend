@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-playground/validator/v10"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jinzhu/gorm"
 )
@@ -9,7 +10,7 @@ import (
 type Topic struct {
 	// gorm.Model
 	ID       uint    `json:"id" gorm:"primary_key;auto_increment"`
-	Name     string  `json:"name"`
+	Name     string  `json:"name" validate:"required" gorm:"not null"`
 	Children []Topic `json:"children" gorm:"many2many:is_child_of;association_jointable_foreignkey:child_topic_id"`
 }
 
@@ -24,6 +25,7 @@ type TopicStore interface {
 
 type TopicDBStore struct {
 	*gorm.DB
+	validate *validator.Validate
 	log hclog.Logger
 }
 
@@ -35,7 +37,7 @@ func (e TopicNotFoundError) Error() string { return "Topic not found! Cause: " +
 func (e TopicNotFoundError) Unwrap() error { return e.Cause }
 
 func NewTopicDBStore(db *gorm.DB, log hclog.Logger) *TopicDBStore {
-	return &TopicDBStore{db, log}
+	return &TopicDBStore{db, validator.New(), log}
 }
 
 func (db *TopicDBStore) GetTopics() ([]*Topic, error) {
@@ -72,6 +74,12 @@ func (db *TopicDBStore) GetTopicByID(id uint) (*Topic, error) {
 func (db *TopicDBStore) UpdateTopic(id uint, topic *Topic) (*Topic, error) {
 	db.log.Debug("Updating topic...", "topic", hclog.Fmt("%+v", topic))
 
+	err := db.validate.Struct(topic)
+	if err != nil {
+		db.log.Error("Error validating topic", "err", err)
+		return nil, err
+	}
+
 	if err := db.Model(&Topic{}).Where("id = ?", id).Take(&Topic{}).Update(topic).First(&topic, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			db.log.Error("Topic to be updated not found", "topic", hclog.Fmt("%+v", topic))
@@ -88,6 +96,12 @@ func (db *TopicDBStore) UpdateTopic(id uint, topic *Topic) (*Topic, error) {
 
 func (db *TopicDBStore) AddTopic(topic *Topic) (*Topic, error) {
 	db.log.Debug("Adding topic...", "topic", hclog.Fmt("%+v", topic))
+
+	err := db.validate.Struct(topic)
+	if err != nil {
+		db.log.Error("Error validating topic", "err", err)
+		return nil, err
+	}
 
 	if err := db.Create(&topic).Error; err != nil {
 		db.log.Error("Unexpected error creating topic", "err", err)

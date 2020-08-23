@@ -62,8 +62,6 @@ func (lh *EventsHandler) CreateEvent(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO validacija ako treba
-
 	event, err = lh.store.AddEvent(event)
 	if err != nil {
 		writeJSONErrorWithStatus("Error creating entity", err.Error(), rw, http.StatusBadRequest)
@@ -87,8 +85,6 @@ func (lh *EventsHandler) UpdateEvent(rw http.ResponseWriter, r *http.Request) {
 		writeJSONErrorWithStatus("Error deserializing entity", err.Error(), rw, http.StatusBadRequest)
 		return
 	}
-
-	// TODO validacija ako treba
 
 	event, err = lh.store.UpdateEvent(id, event)
 	if err != nil {

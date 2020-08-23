@@ -62,8 +62,6 @@ func (lh *TopicsHandler) CreateTopic(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO validacija ako treba
-
 	topic, err = lh.store.AddTopic(topic)
 	if err != nil {
 		writeJSONErrorWithStatus("Error creating entity", err.Error(), rw, http.StatusBadRequest)
@@ -87,8 +85,6 @@ func (lh *TopicsHandler) UpdateTopic(rw http.ResponseWriter, r *http.Request) {
 		writeJSONErrorWithStatus("Error deserializing entity", err.Error(), rw, http.StatusBadRequest)
 		return
 	}
-
-	// TODO validacija ako treba
 
 	topic, err = lh.store.UpdateTopic(id, topic)
 	if err != nil {

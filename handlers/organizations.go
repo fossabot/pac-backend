@@ -62,8 +62,6 @@ func (lh *OrganizationsHandler) CreateOrganization(rw http.ResponseWriter, r *ht
 		return
 	}
 
-	// TODO validacija ako treba
-
 	organization, err = lh.store.AddOrganization(organization)
 	if err != nil {
 		writeJSONErrorWithStatus("Error creating entity", err.Error(), rw, http.StatusBadRequest)
@@ -87,8 +85,6 @@ func (lh *OrganizationsHandler) UpdateOrganization(rw http.ResponseWriter, r *ht
 		writeJSONErrorWithStatus("Error deserializing entity", err.Error(), rw, http.StatusBadRequest)
 		return
 	}
-
-	// TODO validacija ako treba
 
 	organization, err = lh.store.UpdateOrganization(id, organization)
 	if err != nil {

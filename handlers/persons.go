@@ -62,8 +62,6 @@ func (lh *PersonsHandler) CreatePerson(rw http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// TODO validacija ako treba
-
 	person, err = lh.store.AddPerson(person)
 	if err != nil {
 		writeJSONErrorWithStatus("Error creating entity", err.Error(), rw, http.StatusBadRequest)
@@ -87,8 +85,6 @@ func (lh *PersonsHandler) UpdatePerson(rw http.ResponseWriter, r *http.Request) 
 		writeJSONErrorWithStatus("Error deserializing entity", err.Error(), rw, http.StatusBadRequest)
 		return
 	}
-
-	// TODO validacija ako treba
 
 	person, err = lh.store.UpdatePerson(id, person)
 	if err != nil {

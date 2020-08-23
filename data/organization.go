@@ -2,14 +2,15 @@ package data
 
 import (
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-playground/validator/v10"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jinzhu/gorm"
 )
 
 type Organization struct {
 	// gorm.Model
-	ID   uint   `json:"id" gorm:"primary_key;auto_increment"`
-	Name string `json:"name"`
+	ID      uint     `json:"id" gorm:"primary_key;auto_increment"`
+	Name    string   `json:"name" validate:"required" gorm:"not null"`
 }
 
 type OrganizationStore interface {
@@ -22,7 +23,8 @@ type OrganizationStore interface {
 
 type OrganizationDBStore struct {
 	*gorm.DB
-	log hclog.Logger
+	validate *validator.Validate
+	log      hclog.Logger
 }
 
 type OrganizationNotFoundError struct {
@@ -35,7 +37,7 @@ func (e OrganizationNotFoundError) Error() string {
 func (e OrganizationNotFoundError) Unwrap() error { return e.Cause }
 
 func NewOrganizationDBStore(db *gorm.DB, log hclog.Logger) *OrganizationDBStore {
-	return &OrganizationDBStore{db, log}
+	return &OrganizationDBStore{db, validator.New(), log}
 }
 
 func (db *OrganizationDBStore) GetOrganizations() ([]*Organization, error) {
@@ -72,6 +74,12 @@ func (db *OrganizationDBStore) GetOrganizationByID(id uint) (*Organization, erro
 func (db *OrganizationDBStore) UpdateOrganization(id uint, organization *Organization) (*Organization, error) {
 	db.log.Debug("Updating organization...", "organization", hclog.Fmt("%+v", organization))
 
+	err := db.validate.Struct(organization)
+	if err != nil {
+		db.log.Error("Error validating organization", "err", err)
+		return nil, err
+	}
+
 	if err := db.Model(&Organization{}).Where("id = ?", id).Take(&Organization{}).Update(organization).First(&organization, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			db.log.Error("Organization to be updated not found", "organization", hclog.Fmt("%+v", organization))
@@ -88,6 +96,12 @@ func (db *OrganizationDBStore) UpdateOrganization(id uint, organization *Organiz
 
 func (db *OrganizationDBStore) AddOrganization(organization *Organization) (*Organization, error) {
 	db.log.Debug("Adding organization...", "organization", hclog.Fmt("%+v", organization))
+
+	err := db.validate.Struct(organization)
+	if err != nil {
+		db.log.Error("Error validating organization", "err", err)
+		return nil, err
+	}
 
 	if err := db.Create(&organization).Error; err != nil {
 		db.log.Error("Unexpected error creating organization", "err", err)

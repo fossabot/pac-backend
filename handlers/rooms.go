@@ -62,8 +62,6 @@ func (lh *RoomsHandler) CreateRoom(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO validacija ako treba
-
 	room, err = lh.store.AddRoom(room)
 	if err != nil {
 		writeJSONErrorWithStatus("Error creating entity", err.Error(), rw, http.StatusBadRequest)
@@ -87,8 +85,6 @@ func (lh *RoomsHandler) UpdateRoom(rw http.ResponseWriter, r *http.Request) {
 		writeJSONErrorWithStatus("Error deserializing entity", err.Error(), rw, http.StatusBadRequest)
 		return
 	}
-
-	// TODO validacija ako treba
 
 	room, err = lh.store.UpdateRoom(id, room)
 	if err != nil {

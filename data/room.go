@@ -2,16 +2,17 @@ package data
 
 import (
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-playground/validator/v10"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jinzhu/gorm"
 )
 
 type Room struct {
 	// gorm.Model
-	ID             uint         `json:"id" gorm:"primary_key;auto_increment"`
-	Name           string       `json:"name"`
-	OrganizationID uint         `json:"-"`
-	Organization   Organization `json:"organization" gorm:"foreignkey:OrganizationID"`
+	ID             uint          `json:"id" gorm:"primary_key;auto_increment"`
+	Name           string        `json:"name" validate:"required" gorm:"not null"`
+	OrganizationID uint          `json:"-"`
+	Organization   *Organization `json:"organization" validate:"required"`
 }
 
 type RoomStore interface {
@@ -24,7 +25,8 @@ type RoomStore interface {
 
 type RoomDBStore struct {
 	*gorm.DB
-	log hclog.Logger
+	validate *validator.Validate
+	log      hclog.Logger
 }
 
 type RoomNotFoundError struct {
@@ -35,7 +37,7 @@ func (e RoomNotFoundError) Error() string { return "Room not found! Cause: " + e
 func (e RoomNotFoundError) Unwrap() error { return e.Cause }
 
 func NewRoomDBStore(db *gorm.DB, log hclog.Logger) *RoomDBStore {
-	return &RoomDBStore{db, log}
+	return &RoomDBStore{db, validator.New(), log}
 }
 
 func (db *RoomDBStore) GetRooms() ([]*Room, error) {
@@ -72,6 +74,12 @@ func (db *RoomDBStore) GetRoomByID(id uint) (*Room, error) {
 func (db *RoomDBStore) UpdateRoom(id uint, room *Room) (*Room, error) {
 	db.log.Debug("Updating room...", "room", hclog.Fmt("%+v", room))
 
+	err := db.validate.Struct(room)
+	if err != nil {
+		db.log.Error("Error validating room", "err", err)
+		return nil, err
+	}
+
 	if err := db.Model(&Room{}).Where("id = ?", id).Take(&Room{}).Update(room).First(&room, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			db.log.Error("Room to be updated not found", "room", hclog.Fmt("%+v", room))
@@ -88,6 +96,12 @@ func (db *RoomDBStore) UpdateRoom(id uint, room *Room) (*Room, error) {
 
 func (db *RoomDBStore) AddRoom(room *Room) (*Room, error) {
 	db.log.Debug("Adding room...", "room", hclog.Fmt("%+v", room))
+
+	err := db.validate.Struct(room)
+	if err != nil {
+		db.log.Error("Error validating room", "err", err)
+		return nil, err
+	}
 
 	if err := db.Create(&room).Error; err != nil {
 		db.log.Error("Unexpected error creating room", "err", err)

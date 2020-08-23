@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-playground/validator/v10"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jinzhu/gorm"
 )
@@ -9,9 +10,9 @@ import (
 type Person struct {
 	// gorm.Model
 	ID             uint         `json:"id" gorm:"primary_key;auto_increment"`
-	Name           string       `json:"name"`
+	Name           string       `json:"name" validate:"required" gorm:"not null"`
 	OrganizationID uint         `json:"-"`
-	Organization   Organization `json:"organization" gorm:"foreignkey:OrganizationID"`
+	Organization   Organization `json:"organization" validate:"required"`
 }
 
 type PersonStore interface {
@@ -24,7 +25,8 @@ type PersonStore interface {
 
 type PersonDBStore struct {
 	*gorm.DB
-	log hclog.Logger
+	validate *validator.Validate
+	log      hclog.Logger
 }
 
 type PersonNotFoundError struct {
@@ -35,7 +37,7 @@ func (e PersonNotFoundError) Error() string { return "Person not found! Cause: "
 func (e PersonNotFoundError) Unwrap() error { return e.Cause }
 
 func NewPersonDBStore(db *gorm.DB, log hclog.Logger) *PersonDBStore {
-	return &PersonDBStore{db, log}
+	return &PersonDBStore{db, validator.New(), log}
 }
 
 func (db *PersonDBStore) GetPersons() ([]*Person, error) {
@@ -72,6 +74,12 @@ func (db *PersonDBStore) GetPersonByID(id uint) (*Person, error) {
 func (db *PersonDBStore) UpdatePerson(id uint, person *Person) (*Person, error) {
 	db.log.Debug("Updating person...", "person", hclog.Fmt("%+v", person))
 
+	err := db.validate.Struct(person)
+	if err != nil {
+		db.log.Error("Error validating person", "err", err)
+		return nil, err
+	}
+
 	if err := db.Model(&Person{}).Where("id = ?", id).Take(&Person{}).Update(person).First(&person, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			db.log.Error("Person to be updated not found", "person", hclog.Fmt("%+v", person))
@@ -88,6 +96,12 @@ func (db *PersonDBStore) UpdatePerson(id uint, person *Person) (*Person, error) 
 
 func (db *PersonDBStore) AddPerson(person *Person) (*Person, error) {
 	db.log.Debug("Adding person...", "person", hclog.Fmt("%+v", person))
+
+	err := db.validate.Struct(person)
+	if err != nil {
+		db.log.Error("Error validating person", "err", err)
+		return nil, err
+	}
 
 	if err := db.Create(&person).Error; err != nil {
 		db.log.Error("Unexpected error creating person", "err", err)

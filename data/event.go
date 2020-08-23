@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-playground/validator/v10"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jinzhu/gorm"
 	"time"
@@ -10,11 +11,11 @@ import (
 type Event struct {
 	// gorm.Model
 	ID         uint      `json:"id" gorm:"primary_key;auto_increment"`
-	Name       string    `json:"name"`
-	BeginDate  time.Time `json:"beginDate"`
-	EndDate    time.Time `json:"endDate"`
+	Name       string    `json:"name" validate:"required" gorm:"not null"`
+	BeginDate  time.Time `json:"beginDate" validate:"required" gorm:"not null"`
+	EndDate    time.Time `json:"endDate" validate:"required" gorm:"not null"`
 	LocationID uint      `json:"-"`
-	Location   Location  `json:"location" gorm:"foreignkey:LocationID"`
+	Location   *Location `json:"location" validate:"required"`
 }
 
 type EventStore interface {
@@ -28,7 +29,8 @@ type EventStore interface {
 
 type EventDBStore struct {
 	*gorm.DB
-	log hclog.Logger
+	validate *validator.Validate
+	log      hclog.Logger
 }
 
 type EventNotFoundError struct {
@@ -39,7 +41,7 @@ func (e EventNotFoundError) Error() string { return "Event not found! Cause: " +
 func (e EventNotFoundError) Unwrap() error { return e.Cause }
 
 func NewEventDBStore(db *gorm.DB, log hclog.Logger) *EventDBStore {
-	return &EventDBStore{db, log}
+	return &EventDBStore{db, validator.New(), log}
 }
 
 func (db *EventDBStore) GetEvents() ([]*Event, error) {
@@ -76,6 +78,12 @@ func (db *EventDBStore) GetEventByID(id uint) (*Event, error) {
 func (db *EventDBStore) UpdateEvent(id uint, event *Event) (*Event, error) {
 	db.log.Debug("Updating event...", "event", hclog.Fmt("%+v", event))
 
+	err := db.validate.Struct(event)
+	if err != nil {
+		db.log.Error("Error validating event", "err", err)
+		return nil, err
+	}
+
 	if err := db.Model(&Event{}).Where("id = ?", id).Take(&Event{}).Update(event).First(&event, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			db.log.Error("Event to be updated not found", "event", hclog.Fmt("%+v", event))
@@ -92,6 +100,12 @@ func (db *EventDBStore) UpdateEvent(id uint, event *Event) (*Event, error) {
 
 func (db *EventDBStore) AddEvent(event *Event) (*Event, error) {
 	db.log.Debug("Adding event...", "event", hclog.Fmt("%+v", event))
+
+	err := db.validate.Struct(event)
+	if err != nil {
+		db.log.Error("Error validating event", "err", err)
+		return nil, err
+	}
 
 	if err := db.Create(&event).Error; err != nil {
 		db.log.Error("Unexpected error creating event", "err", err)

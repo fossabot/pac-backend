@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/davecgh/go-spew v1.1.1
+	github.com/go-playground/validator/v10 v10.3.0
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/go-hclog v0.14.1
 	github.com/jinzhu/gorm v1.9.15

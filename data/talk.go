@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-playground/validator/v10"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jinzhu/gorm"
 )
@@ -9,10 +10,10 @@ import (
 type Talk struct {
 	// gorm.Model
 	ID                uint       `json:"id" gorm:"primary_key;auto_increment"`
-	Title             string     `json:"title"`
-	DurationInMinutes uint       `json:"durationInMinutes"`
-	Language          string     `json:"language"`
-	Level             TalkLevel  `json:"level"`
+	Title             string     `json:"title" validate:"required" gorm:"not null"`
+	DurationInMinutes uint       `json:"durationInMinutes" validate:"required" gorm:"not null"`
+	Language          string     `json:"language" validate:"required" gorm:"not null"`
+	Level             TalkLevel  `json:"level" validate:"required" gorm:"not null"`
 	Persons           []Person   `json:"persons" gorm:"many2many:talks_at;"`
 	Topics            []Topic    `json:"topics" gorm:"many2many:talk_topic;"`
 	TalkDates         []TalkDate `json:"talkDates" gorm:"foreignkey:TalkID;"`
@@ -38,6 +39,7 @@ type TalkStore interface {
 
 type TalkDBStore struct {
 	*gorm.DB
+	validate *validator.Validate
 	log hclog.Logger
 }
 
@@ -49,7 +51,7 @@ func (e TalkNotFoundError) Error() string { return "Talk not found! Cause: " + e
 func (e TalkNotFoundError) Unwrap() error { return e.Cause }
 
 func NewTalkDBStore(db *gorm.DB, log hclog.Logger) *TalkDBStore {
-	return &TalkDBStore{db, log}
+	return &TalkDBStore{db, validator.New(), log}
 }
 
 func (db *TalkDBStore) GetTalks() ([]*Talk, error) {
@@ -99,6 +101,12 @@ func (db *TalkDBStore) GetTalkByID(id uint) (*Talk, error) {
 func (db *TalkDBStore) UpdateTalk(id uint, talk *Talk) (*Talk, error) {
 	db.log.Debug("Updating talk...", "talk", hclog.Fmt("%+v", talk))
 
+	err := db.validate.Struct(talk)
+	if err != nil {
+		db.log.Error("Error validating talk", "err", err)
+		return nil, err
+	}
+
 	if err := db.Model(&Talk{}).Where("id = ?", id).Take(&Talk{}).Update(talk).First(&talk, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			db.log.Error("Talk to be updated not found", "talk", hclog.Fmt("%+v", talk))
@@ -115,6 +123,12 @@ func (db *TalkDBStore) UpdateTalk(id uint, talk *Talk) (*Talk, error) {
 
 func (db *TalkDBStore) AddTalk(talk *Talk) (*Talk, error) {
 	db.log.Debug("Adding talk...", "talk", hclog.Fmt("%+v", talk))
+
+	err := db.validate.Struct(talk)
+	if err != nil {
+		db.log.Error("Error validating talk", "err", err)
+		return nil, err
+	}
 
 	if err := db.Create(&talk).Error; err != nil {
 		db.log.Error("Unexpected error creating talk", "err", err)

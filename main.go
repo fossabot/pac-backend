@@ -65,9 +65,10 @@ func main() {
 	th := handlers.NewTopicsHandler(topicStore, logger)
 	tkh := handlers.NewTalksHandler(talkStore, logger)
 	tdh := handlers.NewTalkDatesHandler(talkDateStore, logger)
+	ih := handlers.NewDBInitHandler(db, locationStore, eventStore, organizationStore, personStore, roomStore, topicStore, talkStore, talkDateStore, logger)
 
-	// TODO zasad ovde, napravi endpoint za initicijalizaciju
-	database.Init(db, locationStore, eventStore, organizationStore, personStore, roomStore, topicStore, talkStore, talkDateStore)
+	// TODO ovde radi testiranja
+	database.Init(db, locationStore, eventStore, organizationStore, personStore, roomStore, topicStore, talkStore, talkDateStore, logger)
 
 	sm := mux.NewRouter()
 
@@ -155,6 +156,9 @@ func main() {
 
 	// Prometheus metrics handler
 	sm.Handle("/metrics", promhttp.Handler())
+
+	// Database init handler
+	sm.Handle("/initDB", http.HandlerFunc(ih.Handle))
 
 	// create Server
 	s := http.Server{
