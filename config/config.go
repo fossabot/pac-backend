@@ -40,7 +40,7 @@ func LoadConfig() (*Config, error) {
 	// 1) Set defaults
 	configReader.SetDefault("BIND_ADDRESS", Defaults["BIND_ADDRESS"])
 	configReader.SetDefault("LOG_LEVEL", Defaults["LOG_LEVEL"])
-	configReader.SetDefault("LOG_PERSISTENCE", Defaults["LOG_LEVEL"])
+	configReader.SetDefault("LOG_PERSISTENCE", Defaults["LOG_PERSISTENCE"])
 	configReader.SetDefault("DB_DRIVER", Defaults["DB_DRIVER"])
 	configReader.SetDefault("DB_NAME", Defaults["DB_NAME"])
 	configReader.SetDefault("ENABLE_OAUTH", Defaults["ENABLE_OAUTH"])
