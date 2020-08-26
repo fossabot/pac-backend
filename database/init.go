@@ -66,7 +66,7 @@ func Init(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.Organi
 	})
 	/*eventCloudnativeConference*/ _, _ = es.AddEvent(&data.Event{
 		ID:        4,
-		Name:      "Prodyna Job Fair",
+		Name:      "Cloud Native Conference",
 		BeginDate: time.Date(2021, time.Month(5), 22, 0, 0, 0, 0, time.UTC),
 		EndDate:   time.Date(2021, time.Month(5), 23, 0, 0, 0, 0, time.UTC),
 		Location:  locationBelgradeFair,
