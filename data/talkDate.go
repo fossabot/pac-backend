@@ -13,13 +13,13 @@ type TalkDate struct {
 	ID         uint      `json:"id" gorm:"primary_key;auto_increment"`
 	BeginDate  time.Time `json:"beginDate" validate:"required" gorm:"not null"`
 	TalkID     uint      `json:"-"`
-	Talk       *Talk     `json:"talk" validate:"required"`
+	Talk       *Talk     `json:"talk,omitempty" validate:"required"`
 	RoomID     uint      `json:"-"`
-	Room       *Room     `json:"room" validate:"required"`
+	Room       *Room     `json:"room,omitempty" validate:"required"`
 	EventID    uint      `json:"-"`
-	Event      *Event    `json:"event" validate:"required"`
+	Event      *Event    `json:"event,omitempty" validate:"required"`
 	LocationID uint      `json:"-"`
-	Location   *Location `json:"location" validate:"required"`
+	Location   *Location `json:"location,omitempty" validate:"required"`
 }
 
 type TalkDateStore interface {

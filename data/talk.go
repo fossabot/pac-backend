@@ -14,9 +14,9 @@ type Talk struct {
 	DurationInMinutes uint       `json:"durationInMinutes" validate:"required" gorm:"not null"`
 	Language          string     `json:"language" validate:"required" gorm:"not null"`
 	Level             TalkLevel  `json:"level" validate:"required" gorm:"not null"`
-	Persons           []Person   `json:"persons" gorm:"many2many:talks_at;"`
-	Topics            []Topic    `json:"topics" gorm:"many2many:talk_topic;"`
-	TalkDates         []TalkDate `json:"talkDates" gorm:"foreignkey:TalkID;"`
+	Persons           []Person   `json:"persons,omitempty" gorm:"many2many:talks_at;"`
+	Topics            []Topic    `json:"topics,omitempty" gorm:"many2many:talk_topic;"`
+	TalkDates         []TalkDate `json:"talkDates,omitempty" gorm:"foreignkey:TalkID;"`
 }
 
 type TalkLevel string
@@ -64,6 +64,7 @@ func (db *TalkDBStore) GetTalks() ([]*Talk, error) {
 		Preload("Topics").
 		Preload("Topics.Children").
 		Preload("TalkDates").
+		Preload("TalkDates.Room").
 		Preload("TalkDates.Event").
 		Find(&talks).Error; err != nil {
 		db.log.Error("Error getting all talks", "err", err)
@@ -83,6 +84,7 @@ func (db *TalkDBStore) GetTalkByID(id uint) (*Talk, error) {
 		Preload("Topics").
 		Preload("Topics.Children").
 		Preload("TalkDates").
+		Preload("TalkDates.Room").
 		Preload("TalkDates.Event").
 		First(&talk, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
@@ -168,6 +170,7 @@ func (db *TalkDBStore) GetTalksByEventID(eventID uint) ([]*Talk, error) {
 		Preload("Topics.Children").
 		Preload("TalkDates").
 		Preload("TalkDates.Event").
+		Preload("TalkDates.Room").
 		Where("id IN ?", db.Table("talk_date").Select("talk_id").Where("event_id = ?", eventID).SubQuery()).
 		Find(&talks).Error; err != nil {
 		db.log.Error("Error getting talks", "err", err)

@@ -12,7 +12,7 @@ type Room struct {
 	ID             uint          `json:"id" gorm:"primary_key;auto_increment"`
 	Name           string        `json:"name" validate:"required" gorm:"not null"`
 	OrganizationID uint          `json:"-"`
-	Organization   *Organization `json:"organization" validate:"required"`
+	Organization   *Organization `json:"organization,omitempty" validate:"required"`
 }
 
 type RoomStore interface {

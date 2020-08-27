@@ -15,7 +15,7 @@ type Event struct {
 	BeginDate  time.Time `json:"beginDate" validate:"required" gorm:"not null"`
 	EndDate    time.Time `json:"endDate" validate:"required" gorm:"not null"`
 	LocationID uint      `json:"-"`
-	Location   *Location `json:"location" validate:"required"`
+	Location   *Location `json:"location,omitempty" validate:"required"`
 }
 
 type EventStore interface {

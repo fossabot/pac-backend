@@ -11,7 +11,7 @@ type Topic struct {
 	// gorm.Model
 	ID       uint    `json:"id" gorm:"primary_key;auto_increment"`
 	Name     string  `json:"name" validate:"required" gorm:"not null"`
-	Children []Topic `json:"children" gorm:"many2many:is_child_of;association_jointable_foreignkey:child_topic_id"`
+	Children []Topic `json:"children,omitempty" gorm:"many2many:is_child_of;association_jointable_foreignkey:child_topic_id"`
 }
 
 type TopicStore interface {
