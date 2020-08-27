@@ -52,7 +52,15 @@ func (db *TalkDateDBStore) GetTalkDates() ([]*TalkDate, error) {
 	db.log.Debug("Getting all talkDates...")
 
 	var talkDates []*TalkDate
-	if err := db.Preload("Talk").Preload("Room").Preload("Event").Preload("Location").Find(&talkDates).Error; err != nil {
+	if err := db.
+		Preload("Talk").
+		Preload("Talk.Persons").
+		Preload("Talk.Topics").
+		Preload("Talk.Topics.Children").
+		Preload("Room").
+		Preload("Event").
+		Preload("Location").
+		Find(&talkDates).Error; err != nil {
 		db.log.Error("Error getting all talkDates", "err", err)
 		return []*TalkDate{}, err
 	}
@@ -65,7 +73,15 @@ func (db *TalkDateDBStore) GetTalkDateByID(id uint) (*TalkDate, error) {
 	db.log.Debug("Getting talkDate by id...", "id", id)
 
 	var talkDate TalkDate
-	if err := db.Preload("Talk").Preload("Room").Preload("Event").Preload("Location").First(&talkDate, id).Error; err != nil {
+	if err := db.
+		Preload("Talk").
+		Preload("Talk.Persons").
+		Preload("Talk.Topics").
+		Preload("Talk.Topics.Children").
+		Preload("Room").
+		Preload("Event").
+		Preload("Location").
+		First(&talkDate, id).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			db.log.Error("TalkDate not found by id", "id", id)
 			return nil, &TalkDateNotFoundError{err}
@@ -141,11 +157,15 @@ func (db *TalkDateDBStore) GetTalkDatesByEventID(eventID uint) ([]*TalkDate, err
 	db.log.Debug("Getting talkDates by id...", "eventID", eventID)
 
 	var talkDates []*TalkDate
-	if err := db.Preload("Talk").
+	if err := db.
+		Preload("Talk").
+		Preload("Talk.Persons").
+		Preload("Talk.Topics").
+		Preload("Talk.Topics.Children").
 		Preload("Room").
 		Preload("Event").
 		Preload("Location").
-		Where(TalkDate{Event: &Event{ID: eventID}}).
+		Where(TalkDate{EventID:  eventID}).
 		Find(&talkDates).Error; err != nil {
 		db.log.Error("Error getting talkDates", "err", err)
 		return []*TalkDate{}, err

@@ -126,7 +126,7 @@ func (lh *TalkDatesHandler) DeleteTalkDate(rw http.ResponseWriter, r *http.Reque
 func (lh *TalkDatesHandler) GetTalkDatesByEventID(rw http.ResponseWriter, r *http.Request) {
 	eventID := readId(r)
 
-	talkDates, err := lh.store.GetTalkDateByID(eventID)
+	talkDates, err := lh.store.GetTalkDatesByEventID(eventID)
 	if err != nil {
 		writeJSONErrorWithStatus("Error getting entities", err.Error(), rw, http.StatusInternalServerError)
 		return

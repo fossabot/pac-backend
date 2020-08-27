@@ -46,8 +46,8 @@ func Init(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.Organi
 	eventBestJavaConference, _ := es.AddEvent(&data.Event{
 		ID:        1,
 		Name:      "Best Java Conference",
-		BeginDate: time.Date(2021, time.Month(2), 12, 0, 0, 0, 0, time.UTC),
-		EndDate:   time.Date(2021, time.Month(2), 14, 0, 0, 0, 0, time.UTC),
+		BeginDate: time.Date(2021, time.Month(5), 12, 0, 0, 0, 0, time.UTC),
+		EndDate:   time.Date(2021, time.Month(5), 14, 0, 0, 0, 0, time.UTC),
 		Location:  locationBelexpo,
 	})
 	eventProdynaJobFair, _ := es.AddEvent(&data.Event{
