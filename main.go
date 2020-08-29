@@ -70,8 +70,6 @@ func main() {
 	// TODO ovde radi testiranja
 	database.Init(db, locationStore, eventStore, organizationStore, personStore, roomStore, topicStore, talkStore, talkDateStore, logger)
 
-	sm := mux.NewRouter()
-
 	// Authentication
 	oauth, err := auth.NewProvider(auth.OauthConfig{
 		Enabled:      cnf.OAuthEnable,
@@ -87,12 +85,15 @@ func main() {
 	}
 
 	// Handler chains
-	defaultChain := alice.New(middleware.Prometheus, middleware.AllowCORS)
+	defaultChain := alice.New(middleware.Prometheus)
 	secureChain := defaultChain.Append(middleware.EnforceJsonContentType)
 	secureJsonChain := secureChain
 	if cnf.OAuthEnable {
 		secureJsonChain = secureChain.Append(oauth.Middleware)
 	}
+
+	sm := mux.NewRouter()
+	sm.Use(middleware.AllowCORS)
 
 	// Register handlers
 	// Health
@@ -100,56 +101,56 @@ func main() {
 	// Locations
 	sm.Handle("/locations", defaultChain.Then(http.HandlerFunc(lh.GetLocations))).Methods("GET").Name("GetLocations")
 	sm.Handle("/locations/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(lh.GetLocation))).Methods("GET")
-	sm.Handle("/locations", secureJsonChain.Then(http.HandlerFunc(lh.CreateLocation))).Methods("POST")
-	sm.Handle("/locations/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(lh.UpdateLocation))).Methods("PUT")
-	sm.Handle("/locations/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(lh.DeleteLocation))).Methods("DELETE")
+	sm.Handle("/locations", secureJsonChain.Then(http.HandlerFunc(lh.CreateLocation))).Methods("POST", "OPTIONS")
+	sm.Handle("/locations/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(lh.UpdateLocation))).Methods("PUT", "OPTIONS")
+	sm.Handle("/locations/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(lh.DeleteLocation))).Methods("DELETE", "OPTIONS")
 	// Events
 	sm.Handle("/events", defaultChain.Then(http.HandlerFunc(eh.GetEvents))).Methods("GET")
 	sm.Handle("/events/talk/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(eh.GetEventsByTalkID))).Methods("GET")
 	sm.Handle("/events/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(eh.GetEvent))).Methods("GET")
-	sm.Handle("/events", secureJsonChain.Then(http.HandlerFunc(eh.CreateEvent))).Methods("POST")
-	sm.Handle("/events/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(eh.UpdateEvent))).Methods("PUT")
-	sm.Handle("/events/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(eh.DeleteEvent))).Methods("DELETE")
+	sm.Handle("/events", secureJsonChain.Then(http.HandlerFunc(eh.CreateEvent))).Methods("POST", "OPTIONS")
+	sm.Handle("/events/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(eh.UpdateEvent))).Methods("PUT", "OPTIONS")
+	sm.Handle("/events/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(eh.DeleteEvent))).Methods("DELETE", "OPTIONS")
 	// Organizations
 	sm.Handle("/organizations", defaultChain.Then(http.HandlerFunc(oh.GetOrganizations))).Methods("GET")
 	sm.Handle("/organizations/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(oh.GetOrganization))).Methods("GET")
-	sm.Handle("/organizations", secureJsonChain.Then(http.HandlerFunc(oh.CreateOrganization))).Methods("POST")
-	sm.Handle("/organizations/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(oh.UpdateOrganization))).Methods("PUT")
-	sm.Handle("/organizations/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(oh.DeleteOrganization))).Methods("DELETE")
+	sm.Handle("/organizations", secureJsonChain.Then(http.HandlerFunc(oh.CreateOrganization))).Methods("POST", "OPTIONS")
+	sm.Handle("/organizations/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(oh.UpdateOrganization))).Methods("PUT", "OPTIONS")
+	sm.Handle("/organizations/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(oh.DeleteOrganization))).Methods("DELETE", "OPTIONS")
 	// Persons
 	sm.Handle("/persons", defaultChain.Then(http.HandlerFunc(ph.GetPersons))).Methods("GET")
 	sm.Handle("/persons/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(ph.GetPerson))).Methods("GET")
-	sm.Handle("/persons", secureJsonChain.Then(http.HandlerFunc(ph.CreatePerson))).Methods("POST")
-	sm.Handle("/persons/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(ph.UpdatePerson))).Methods("PUT")
-	sm.Handle("/persons/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(ph.DeletePerson))).Methods("DELETE")
+	sm.Handle("/persons", secureJsonChain.Then(http.HandlerFunc(ph.CreatePerson))).Methods("POST", "OPTIONS")
+	sm.Handle("/persons/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(ph.UpdatePerson))).Methods("PUT", "OPTIONS")
+	sm.Handle("/persons/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(ph.DeletePerson))).Methods("DELETE", "OPTIONS")
 	// Rooms
 	sm.Handle("/rooms", defaultChain.Then(http.HandlerFunc(rh.GetRooms))).Methods("GET")
 	sm.Handle("/rooms/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(rh.GetRoom))).Methods("GET")
-	sm.Handle("/rooms", secureJsonChain.Then(http.HandlerFunc(rh.CreateRoom))).Methods("POST")
-	sm.Handle("/rooms/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(rh.UpdateRoom))).Methods("PUT")
-	sm.Handle("/rooms/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(rh.DeleteRoom))).Methods("DELETE")
+	sm.Handle("/rooms", secureJsonChain.Then(http.HandlerFunc(rh.CreateRoom))).Methods("POST", "OPTIONS")
+	sm.Handle("/rooms/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(rh.UpdateRoom))).Methods("PUT", "OPTIONS")
+	sm.Handle("/rooms/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(rh.DeleteRoom))).Methods("DELETE", "OPTIONS")
 	// Topics
 	sm.Handle("/topics", defaultChain.Then(http.HandlerFunc(th.GetTopics))).Methods("GET")
 	sm.Handle("/topics/event/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(th.GetTopicsByEventID))).Methods("GET")
 	sm.Handle("/topics/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(th.GetTopic))).Methods("GET")
-	sm.Handle("/topics", secureJsonChain.Then(http.HandlerFunc(th.CreateTopic))).Methods("POST")
-	sm.Handle("/topics/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(th.UpdateTopic))).Methods("PUT")
-	sm.Handle("/topics/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(th.DeleteTopic))).Methods("DELETE")
+	sm.Handle("/topics", secureJsonChain.Then(http.HandlerFunc(th.CreateTopic))).Methods("POST", "OPTIONS")
+	sm.Handle("/topics/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(th.UpdateTopic))).Methods("PUT", "OPTIONS")
+	sm.Handle("/topics/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(th.DeleteTopic))).Methods("DELETE", "OPTIONS")
 	// Talks
 	sm.Handle("/talks", defaultChain.Then(http.HandlerFunc(tkh.GetTalks))).Methods("GET")
 	sm.Handle("/talks/event/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(tkh.GetTalksByEventID))).Methods("GET")
 	sm.Handle("/talks/person/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(tkh.GetTalksByPersonID))).Methods("GET")
 	sm.Handle("/talks/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(tkh.GetTalk))).Methods("GET")
-	sm.Handle("/talks", secureJsonChain.Then(http.HandlerFunc(tkh.CreateTalk))).Methods("POST")
-	sm.Handle("/talks/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(tkh.UpdateTalk))).Methods("PUT")
-	sm.Handle("/talks/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(tkh.DeleteTalk))).Methods("DELETE")
+	sm.Handle("/talks", secureJsonChain.Then(http.HandlerFunc(tkh.CreateTalk))).Methods("POST", "OPTIONS")
+	sm.Handle("/talks/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(tkh.UpdateTalk))).Methods("PUT", "OPTIONS")
+	sm.Handle("/talks/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(tkh.DeleteTalk))).Methods("DELETE", "OPTIONS")
 	// Talk Dates
 	sm.Handle("/talkDates", defaultChain.Then(http.HandlerFunc(tdh.GetTalkDates))).Methods("GET")
 	sm.Handle("/talkDates/event/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(tdh.GetTalkDatesByEventID))).Methods("GET")
 	sm.Handle("/talkDates/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(tdh.GetTalkDate))).Methods("GET")
-	sm.Handle("/talkDates", secureJsonChain.Then(http.HandlerFunc(tdh.CreateTalkDate))).Methods("POST")
-	sm.Handle("/talkDates/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(tdh.UpdateTalkDate))).Methods("PUT")
-	sm.Handle("/talkDates/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(tdh.DeleteTalkDate))).Methods("DELETE")
+	sm.Handle("/talkDates", secureJsonChain.Then(http.HandlerFunc(tdh.CreateTalkDate))).Methods("POST", "OPTIONS")
+	sm.Handle("/talkDates/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(tdh.UpdateTalkDate))).Methods("PUT", "OPTIONS")
+	sm.Handle("/talkDates/{id:[0-9]+}", secureChain.Then(http.HandlerFunc(tdh.DeleteTalkDate))).Methods("DELETE", "OPTIONS")
 
 	// OAuth2 callback
 	sm.Handle("/oauth2/callback", oauth.CallbackHandler())
