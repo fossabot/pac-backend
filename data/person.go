@@ -10,8 +10,8 @@ import (
 type Person struct {
 	// gorm.Model
 	ID             uint          `json:"id" gorm:"primary_key;auto_increment"`
-	Name           string        `json:"name" gorm:"unique;not null;default:null"`
-	OrganizationID uint          `json:"-" gorm:"not null;default:null"`
+	Name           string        `json:"name" gorm:"unique;not null;default:''"`
+	OrganizationID uint          `json:"-" gorm:"not null"`
 	Organization   *Organization `json:"organization,omitempty" gorm:"association_autoupdate:false"`
 }
 

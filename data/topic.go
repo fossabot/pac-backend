@@ -10,7 +10,7 @@ import (
 type Topic struct {
 	// gorm.Model
 	ID       uint    `json:"id" gorm:"primary_key;auto_increment"`
-	Name     string  `json:"name" gorm:"not null;default:null"`
+	Name     string  `json:"name" gorm:"not null;default:''"`
 	Children []Topic `json:"children,omitempty" gorm:"many2many:is_child_of;association_jointable_foreignkey:child_topic_id"`
 }
 

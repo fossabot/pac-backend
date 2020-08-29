@@ -11,7 +11,7 @@ import (
 type TalkDate struct {
 	// gorm.Model
 	ID         uint      `json:"id" gorm:"primary_key;auto_increment"`
-	BeginDate  time.Time `json:"beginDate" gorm:"not null;default:null"`
+	BeginDate  time.Time `json:"beginDate" gorm:"not null"`
 	TalkID     uint      `json:"-"`
 	Talk       *Talk     `json:"talk,omitempty" gorm:"association_autoupdate:false"`
 	RoomID     uint      `json:"-"`
