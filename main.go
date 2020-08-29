@@ -12,6 +12,7 @@ import (
 	"github.com/milutindzunic/pac-backend/database"
 	"github.com/milutindzunic/pac-backend/handlers"
 	"github.com/milutindzunic/pac-backend/middleware"
+	"github.com/milutindzunic/pac-backend/middleware/metrics"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
@@ -85,7 +86,7 @@ func main() {
 	}
 
 	// Handler chains
-	defaultChain := alice.New(middleware.Prometheus)
+	defaultChain := alice.New(metrics.Prometheus)
 	secureChain := defaultChain.Append(middleware.EnforceJsonContentType)
 	secureJsonChain := secureChain
 	if cnf.OAuthEnable {
@@ -99,7 +100,7 @@ func main() {
 	// Health
 	sm.HandleFunc("/", hh.Handle)
 	// Locations
-	sm.Handle("/locations", defaultChain.Then(http.HandlerFunc(lh.GetLocations))).Methods("GET").Name("GetLocations")
+	sm.Handle("/locations", defaultChain.Then(http.HandlerFunc(lh.GetLocations))).Methods("GET")
 	sm.Handle("/locations/{id:[0-9]+}", defaultChain.Then(http.HandlerFunc(lh.GetLocation))).Methods("GET")
 	sm.Handle("/locations", secureJsonChain.Then(http.HandlerFunc(lh.CreateLocation))).Methods("POST", "OPTIONS")
 	sm.Handle("/locations/{id:[0-9]+}", secureJsonChain.Then(http.HandlerFunc(lh.UpdateLocation))).Methods("PUT", "OPTIONS")
