@@ -10,13 +10,13 @@ import (
 type Talk struct {
 	// gorm.Model
 	ID                uint       `json:"id" gorm:"primary_key;auto_increment"`
-	Title             string     `json:"title" validate:"required" gorm:"not null"`
-	DurationInMinutes uint       `json:"durationInMinutes" validate:"required" gorm:"not null"`
-	Language          string     `json:"language" validate:"required" gorm:"not null"`
-	Level             TalkLevel  `json:"level" validate:"required" gorm:"not null"`
-	Persons           []Person   `json:"persons,omitempty" gorm:"many2many:talks_at;"`
-	Topics            []Topic    `json:"topics,omitempty" gorm:"many2many:talk_topic;"`
-	TalkDates         []TalkDate `json:"talkDates,omitempty" gorm:"foreignkey:TalkID;"`
+	Title             string     `json:"title" gorm:"not null"`
+	DurationInMinutes uint       `json:"durationInMinutes" gorm:"not null"`
+	Language          string     `json:"language" gorm:"not null"`
+	Level             TalkLevel  `json:"level" gorm:"not null"`
+	Persons           []Person   `json:"persons,omitempty" gorm:"many2many:talks_at;association_autoupdate:false"`
+	Topics            []Topic    `json:"topics,omitempty" gorm:"many2many:talk_topic;association_autoupdate:false"`
+	TalkDates         []TalkDate `json:"talkDates,omitempty" gorm:"foreignkey:TalkID;association_autoupdate:false"`
 }
 
 type TalkLevel string
@@ -120,7 +120,7 @@ func (db *TalkDBStore) UpdateTalk(id uint, talk *Talk) (*Talk, error) {
 	}
 
 	db.log.Debug("Successfully updated talk", "talk", hclog.Fmt("%+v", talk))
-	return talk, nil
+	return db.GetTalkByID(talk.ID)
 }
 
 func (db *TalkDBStore) AddTalk(talk *Talk) (*Talk, error) {
@@ -138,7 +138,7 @@ func (db *TalkDBStore) AddTalk(talk *Talk) (*Talk, error) {
 	}
 
 	db.log.Debug("Successfully added talk", "talk", hclog.Fmt("%+v", talk))
-	return talk, nil
+	return db.GetTalkByID(talk.ID)
 }
 
 func (db *TalkDBStore) DeleteTalkByID(id uint) error {

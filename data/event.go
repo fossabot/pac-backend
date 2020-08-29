@@ -11,11 +11,11 @@ import (
 type Event struct {
 	// gorm.Model
 	ID         uint      `json:"id" gorm:"primary_key;auto_increment"`
-	Name       string    `json:"name" validate:"required" gorm:"not null"`
-	BeginDate  time.Time `json:"beginDate" validate:"required" gorm:"not null"`
-	EndDate    time.Time `json:"endDate" validate:"required" gorm:"not null"`
+	Name       string    `json:"name" gorm:"not null"`
+	BeginDate  time.Time `json:"beginDate" gorm:"not null"`
+	EndDate    time.Time `json:"endDate" gorm:"not null"`
 	LocationID uint      `json:"-"`
-	Location   *Location `json:"location,omitempty" validate:"required"`
+	Location   *Location `json:"location,omitempty" gorm:"association_autoupdate:false"`
 }
 
 type EventStore interface {
@@ -95,7 +95,7 @@ func (db *EventDBStore) UpdateEvent(id uint, event *Event) (*Event, error) {
 	}
 
 	db.log.Debug("Successfully updated event", "event", hclog.Fmt("%+v", event))
-	return event, nil
+	return db.GetEventByID(event.ID)
 }
 
 func (db *EventDBStore) AddEvent(event *Event) (*Event, error) {
@@ -113,7 +113,7 @@ func (db *EventDBStore) AddEvent(event *Event) (*Event, error) {
 	}
 
 	db.log.Debug("Successfully added event", "event", hclog.Fmt("%+v", event))
-	return event, nil
+	return db.GetEventByID(event.ID)
 }
 
 func (db *EventDBStore) DeleteEventByID(id uint) error {

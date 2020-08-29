@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
@@ -20,9 +21,13 @@ func readJSON(rc io.Reader, dst interface{}) error {
 	dec.DisallowUnknownFields()
 
 	err := dec.Decode(&dst)
-	if err != nil {
-		// TODO better error handling
-		return err
+	switch {
+		case err == io.EOF:
+			// empty body
+			return errors.New("cannot deserialize empty body")
+		case err != nil:
+			// TODO better error handling
+			return err
 	}
 
 	return nil

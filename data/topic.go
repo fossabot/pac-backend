@@ -10,7 +10,7 @@ import (
 type Topic struct {
 	// gorm.Model
 	ID       uint    `json:"id" gorm:"primary_key;auto_increment"`
-	Name     string  `json:"name" validate:"required" gorm:"not null"`
+	Name     string  `json:"name" gorm:"not null;default:null"`
 	Children []Topic `json:"children,omitempty" gorm:"many2many:is_child_of;association_jointable_foreignkey:child_topic_id"`
 }
 
@@ -91,7 +91,7 @@ func (db *TopicDBStore) UpdateTopic(id uint, topic *Topic) (*Topic, error) {
 	}
 
 	db.log.Debug("Successfully updated topic", "topic", hclog.Fmt("%+v", topic))
-	return topic, nil
+	return db.GetTopicByID(topic.ID)
 }
 
 func (db *TopicDBStore) AddTopic(topic *Topic) (*Topic, error) {
@@ -109,7 +109,7 @@ func (db *TopicDBStore) AddTopic(topic *Topic) (*Topic, error) {
 	}
 
 	db.log.Debug("Successfully added topic", "topic", hclog.Fmt("%+v", topic))
-	return topic, nil
+	return db.GetTopicByID(topic.ID)
 }
 
 func (db *TopicDBStore) DeleteTopicByID(id uint) error {

@@ -9,10 +9,10 @@ import (
 
 type Person struct {
 	// gorm.Model
-	ID             uint         `json:"id" gorm:"primary_key;auto_increment"`
-	Name           string       `json:"name" validate:"required" gorm:"not null"`
-	OrganizationID uint         `json:"-"`
-	Organization   Organization `json:"organization,omitempty" validate:"required"`
+	ID             uint          `json:"id" gorm:"primary_key;auto_increment"`
+	Name           string        `json:"name" gorm:"unique;not null;default:null"`
+	OrganizationID uint          `json:"-" gorm:"not null;default:null"`
+	Organization   *Organization `json:"organization,omitempty" gorm:"association_autoupdate:false"`
 }
 
 type PersonStore interface {
@@ -91,7 +91,7 @@ func (db *PersonDBStore) UpdatePerson(id uint, person *Person) (*Person, error) 
 	}
 
 	db.log.Debug("Successfully updated person", "person", hclog.Fmt("%+v", person))
-	return person, nil
+	return db.GetPersonByID(person.ID)
 }
 
 func (db *PersonDBStore) AddPerson(person *Person) (*Person, error) {
@@ -109,7 +109,7 @@ func (db *PersonDBStore) AddPerson(person *Person) (*Person, error) {
 	}
 
 	db.log.Debug("Successfully added person", "person", hclog.Fmt("%+v", person))
-	return person, nil
+	return db.GetPersonByID(person.ID)
 }
 
 func (db *PersonDBStore) DeletePersonByID(id uint) error {

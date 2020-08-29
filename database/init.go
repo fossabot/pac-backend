@@ -148,22 +148,22 @@ func Init(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.Organi
 	speakerDKrizic, _ := ps.AddPerson(&data.Person{
 		ID:           1,
 		Name:         "Darko Krizic",
-		Organization: *organizationProdyna,
+		Organization: organizationProdyna,
 	})
 	speakerGGrujic, _ := ps.AddPerson(&data.Person{
 		ID:           2,
 		Name:         "Goran Grujic",
-		Organization: *organizationProdyna,
+		Organization: organizationProdyna,
 	})
 	speakerMNikolic, _ := ps.AddPerson(&data.Person{
 		ID:           3,
 		Name:         "Milos Nikolic",
-		Organization: *organizationProdyna,
+		Organization: organizationProdyna,
 	})
 	speakerAKoblin, _ := ps.AddPerson(&data.Person{
 		ID:           4,
 		Name:         "Aaron Koblin",
-		Organization: *organizationGoogle,
+		Organization: organizationGoogle,
 	})
 
 	// Talks

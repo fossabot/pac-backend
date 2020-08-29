@@ -11,15 +11,15 @@ import (
 type TalkDate struct {
 	// gorm.Model
 	ID         uint      `json:"id" gorm:"primary_key;auto_increment"`
-	BeginDate  time.Time `json:"beginDate" validate:"required" gorm:"not null"`
+	BeginDate  time.Time `json:"beginDate" gorm:"not null;default:null"`
 	TalkID     uint      `json:"-"`
-	Talk       *Talk     `json:"talk,omitempty" validate:"required"`
+	Talk       *Talk     `json:"talk,omitempty" gorm:"association_autoupdate:false"`
 	RoomID     uint      `json:"-"`
-	Room       *Room     `json:"room,omitempty" validate:"required"`
+	Room       *Room     `json:"room,omitempty" gorm:"association_autoupdate:false"`
 	EventID    uint      `json:"-"`
-	Event      *Event    `json:"event,omitempty" validate:"required"`
+	Event      *Event    `json:"event,omitempty" gorm:"association_autoupdate:false"`
 	LocationID uint      `json:"-"`
-	Location   *Location `json:"location,omitempty" validate:"required"`
+	Location   *Location `json:"location,omitempty" gorm:"association_autoupdate:false"`
 }
 
 type TalkDateStore interface {
@@ -115,7 +115,7 @@ func (db *TalkDateDBStore) UpdateTalkDate(id uint, talkDate *TalkDate) (*TalkDat
 	}
 
 	db.log.Debug("Successfully updated talkDate", "talkDate", hclog.Fmt("%+v", talkDate))
-	return talkDate, nil
+	return db.GetTalkDateByID(talkDate.ID)
 }
 
 func (db *TalkDateDBStore) AddTalkDate(talkDate *TalkDate) (*TalkDate, error) {
@@ -133,7 +133,7 @@ func (db *TalkDateDBStore) AddTalkDate(talkDate *TalkDate) (*TalkDate, error) {
 	}
 
 	db.log.Debug("Successfully added talkDate", "talkDate", hclog.Fmt("%+v", talkDate))
-	return talkDate, nil
+	return db.GetTalkDateByID(talkDate.ID)
 }
 
 func (db *TalkDateDBStore) DeleteTalkDateByID(id uint) error {

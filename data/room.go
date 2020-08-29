@@ -10,9 +10,9 @@ import (
 type Room struct {
 	// gorm.Model
 	ID             uint          `json:"id" gorm:"primary_key;auto_increment"`
-	Name           string        `json:"name" validate:"required" gorm:"not null"`
-	OrganizationID uint          `json:"-"`
-	Organization   *Organization `json:"organization,omitempty" validate:"required"`
+	Name           string        `json:"name" gorm:"not null;default:null"`
+	OrganizationID uint          `json:"-" gorm:"not null;default:null"`
+	Organization   *Organization `json:"organization,omitempty" gorm:"association_autoupdate:false"`
 }
 
 type RoomStore interface {
@@ -91,7 +91,7 @@ func (db *RoomDBStore) UpdateRoom(id uint, room *Room) (*Room, error) {
 	}
 
 	db.log.Debug("Successfully updated room", "room", hclog.Fmt("%+v", room))
-	return room, nil
+	return db.GetRoomByID(room.ID)
 }
 
 func (db *RoomDBStore) AddRoom(room *Room) (*Room, error) {
@@ -109,7 +109,7 @@ func (db *RoomDBStore) AddRoom(room *Room) (*Room, error) {
 	}
 
 	db.log.Debug("Successfully added room", "room", hclog.Fmt("%+v", room))
-	return room, nil
+	return db.GetRoomByID(room.ID)
 }
 
 func (db *RoomDBStore) DeleteRoomByID(id uint) error {

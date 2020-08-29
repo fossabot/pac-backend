@@ -10,7 +10,7 @@ import (
 type Organization struct {
 	// gorm.Model
 	ID      uint     `json:"id" gorm:"primary_key;auto_increment"`
-	Name    string   `json:"name" validate:"required" gorm:"not null"`
+	Name    string   `json:"name" gorm:"unique;not null;default:null"`
 }
 
 type OrganizationStore interface {
