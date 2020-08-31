@@ -54,7 +54,7 @@ func Init(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.Organi
 		ID:        2,
 		Name:      "Prodyna Job Fair",
 		BeginDate: time.Date(2021, time.Month(5), 2, 0, 0, 0, 0, time.UTC),
-		EndDate:   time.Date(2021, time.Month(6), 5, 0, 0, 0, 0, time.UTC),
+		EndDate:   time.Date(2021, time.Month(5), 5, 0, 0, 0, 0, time.UTC),
 		Location:  locationHotelPlaza,
 	})
 	eventITConnect, _ := es.AddEvent(&data.Event{
