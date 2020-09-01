@@ -227,7 +227,7 @@ func Init(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.Organi
 	})
 	_, _ = tlkds.AddTalkDate(&data.TalkDate{
 		ID:        3,
-		BeginDate: time.Date(2021, time.Month(5), 2, 13, 0, 0, 0, time.UTC),
+		BeginDate: time.Date(2021, time.Month(5), 2, 12, 0, 0, 0, time.UTC),
 		Talk:      talkJavaForBeginners,
 		Room:      roomWhite,
 		Event:     eventProdynaJobFair,
@@ -235,6 +235,22 @@ func Init(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.Organi
 	})
 	_, _ = tlkds.AddTalkDate(&data.TalkDate{
 		ID:        4,
+		BeginDate: time.Date(2021, time.Month(5), 2, 13, 0, 0, 0, time.UTC),
+		Talk:      talkITJobMarketToday,
+		Room:      roomRed,
+		Event:     eventProdynaJobFair,
+		Location:  locationHotelPlaza,
+	})
+	_, _ = tlkds.AddTalkDate(&data.TalkDate{
+		ID:        5,
+		BeginDate: time.Date(2021, time.Month(5), 3, 8, 0, 0, 0, time.UTC),
+		Talk:      talkFullStackJavaScriptOnKubernetes,
+		Room:      roomWhite,
+		Event:     eventProdynaJobFair,
+		Location:  locationHotelPlaza,
+	})
+	_, _ = tlkds.AddTalkDate(&data.TalkDate{
+		ID:        6,
 		BeginDate: time.Date(2021, time.Month(5), 10, 14, 0, 0, 0, time.UTC),
 		Talk:      talkJavaForBeginners,
 		Room:      roomBlue,
@@ -242,7 +258,7 @@ func Init(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.Organi
 		Location:  locationHotelPlaza,
 	})
 	_, _ = tlkds.AddTalkDate(&data.TalkDate{
-		ID:        5,
+		ID:        7,
 		BeginDate: time.Date(2021, time.Month(6), 2, 15, 0, 0, 0, time.UTC),
 		Talk:      talkITJobMarketToday,
 		Room:      roomGoogle,
@@ -250,7 +266,7 @@ func Init(db *gorm.DB, ls data.LocationStore, es data.EventStore, os data.Organi
 		Location:  locationBelgradeFair,
 	})
 	_, _ = tlkds.AddTalkDate(&data.TalkDate{
-		ID:        6,
+		ID:        8,
 		BeginDate: time.Date(2021, time.Month(5), 10, 12, 0, 0, 0, time.UTC),
 		Talk:      talkITJobMarketToday,
 		Room:      roomBlue,
