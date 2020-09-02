@@ -87,10 +87,12 @@ func main() {
 
 	// Handler chains
 	defaultChain := alice.New(metrics.Prometheus)
-	secureChain := defaultChain.Append(middleware.EnforceJsonContentType)
-	secureJsonChain := secureChain
+	jsonChain := defaultChain.Append(middleware.EnforceJsonContentType)
+	secureChain := defaultChain
+	secureJsonChain := jsonChain
 	if cnf.OAuthEnable {
-		secureJsonChain = secureChain.Append(oauth.Middleware)
+		secureJsonChain = secureJsonChain.Append(oauth.Middleware)
+		secureChain = secureChain.Append(oauth.Middleware)
 	}
 
 	sm := mux.NewRouter()

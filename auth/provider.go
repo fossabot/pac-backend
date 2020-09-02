@@ -59,6 +59,7 @@ func NewProvider(config OauthConfig, logger hclog.Logger) (*OauthProvider, error
 	verifier := provider.Verifier(oidcConfig)
 
 	return &OauthProvider{
+		enabled:      true,
 		oauth2Config: oauth2Config,
 		verifier:     verifier,
 		context:      ctx,
