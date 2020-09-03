@@ -68,8 +68,8 @@ func main() {
 	tdh := handlers.NewTalkDatesHandler(talkDateStore, logger)
 	ih := handlers.NewDBInitHandler(db, locationStore, eventStore, organizationStore, personStore, roomStore, topicStore, talkStore, talkDateStore, logger)
 
-	// TODO ovde radi testiranja
-	database.Init(db, locationStore, eventStore, organizationStore, personStore, roomStore, topicStore, talkStore, talkDateStore, logger)
+	// Database init moved to endpoint, ran here for testing purposes
+	// database.Init(db, locationStore, eventStore, organizationStore, personStore, roomStore, topicStore, talkStore, talkDateStore, logger)
 
 	// Authentication
 	oauth, err := auth.NewProvider(auth.OauthConfig{
@@ -162,7 +162,7 @@ func main() {
 	sm.Handle("/metrics", promhttp.Handler())
 
 	// Database init handler
-	sm.Handle("/initDB", http.HandlerFunc(ih.Handle))
+	sm.Handle("/initDB", http.HandlerFunc(ih.Handle)).Methods("POST")
 
 	// create Server
 	s := http.Server{
