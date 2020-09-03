@@ -30,6 +30,8 @@ type OauthProvider struct {
 const oauthState = "myState"
 
 func NewProvider(config OauthConfig, logger hclog.Logger) (*OauthProvider, error) {
+	logger.Debug("Creating new Oauth Provider...")
+
 	if !config.Enabled {
 		return &OauthProvider{enabled: false}, nil
 	}
@@ -83,22 +85,28 @@ func (p *OauthProvider) Middleware(next http.Handler) http.Handler {
 
 		rawAccessToken := r.Header.Get("Authorization")
 		if rawAccessToken == "" {
+			p.logger.Debug("Access token empty, redirecting...")
 			http.Redirect(rw, r, oauth2Config.AuthCodeURL(oauthState), http.StatusFound)
 			return
 		}
 
+		p.logger.Debug("Raw access token", "token", rawAccessToken)
 		parts := strings.Split(rawAccessToken, " ")
 		if len(parts) != 2 {
 			rw.WriteHeader(http.StatusBadRequest)
 			return
 		}
+
+		p.logger.Debug("Verifying access token", "token", parts[1])
 		_, err := verifier.Verify(ctx, parts[1])
 
 		if err != nil {
+			p.logger.Warn("Access token invalid, redirecting...", "err", err)
 			http.Redirect(rw, r, oauth2Config.AuthCodeURL(oauthState), http.StatusFound)
 			return
 		}
 
+		p.logger.Debug("Access token valid...")
 		next.ServeHTTP(rw, r)
 	})
 }
