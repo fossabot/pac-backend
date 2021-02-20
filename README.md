@@ -1,4 +1,6 @@
 # PAC Backend
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FMilos5611%2Fpac-backend.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FMilos5611%2Fpac-backend?ref=badge_shield)
+
 Backend for the PAC 2020 application (Conferencing app)
 
 ## Running locally
@@ -20,3 +22,7 @@ The image currently cannot run an embedded sqlite3 database, so it is intended t
 ## Environment variables
 
 The PAC Backend application is configured using environment variables which are listed in the .env file in the root directory of the project.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FMilos5611%2Fpac-backend.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FMilos5611%2Fpac-backend?ref=badge_large)
